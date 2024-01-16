@@ -5,72 +5,57 @@ import {
     Get,
     Param,
     ParseIntPipe,
+    ParseUUIDPipe,
     Patch,
     Post,
-    ValidationPipe,
+    Query,
 } from '@nestjs/common';
 
-import { CreatePostDto } from '../dtos/create-post.dto';
-import { UpdatePostDto } from '../dtos/update-post.dto';
-import { PostService } from '../services/post.service';
+import { PaginateOptions } from '@/modules/database/types';
 
-// const posts: PostEntity[] = [
-//     { title: '第一篇文章标题', body: '第一篇文章内容' },
-//     { title: '第二篇文章标题', body: '第二篇文章内容' },
-//     { title: '第三篇文章标题', body: '第三篇文章内容' },
-//     { title: '第四篇文章标题', body: '第四篇文章内容' },
-//     { title: '第五篇文章标题', body: '第五篇文章内容' },
-//     { title: '第六篇文章标题', body: '第六篇文章内容' },
-// ].map((v, id) => ({ ...v, id }));
+import { PostService } from '../services/post.service';
 
 @Controller('posts')
 export class PostController {
     constructor(private postService: PostService) {}
 
     @Get()
-    async index() {
-        return this.postService.findAll();
+    async list(
+        @Query()
+        options: PaginateOptions,
+    ) {
+        return this.postService.paginate(options);
     }
 
     @Get(':id')
-    async show(@Param('id', new ParseIntPipe()) id: number) {
-        return this.postService.findOne(id);
+    async detail(
+        @Param('id', new ParseUUIDPipe())
+        id: string,
+    ) {
+        return this.postService.detail(id);
     }
 
     @Post()
     async store(
-        @Body(
-            new ValidationPipe({
-                transform: true,
-                forbidNonWhitelisted: true,
-                forbidUnknownValues: true,
-                validationError: { target: false },
-                groups: ['create'],
-            }),
-        )
-        data: CreatePostDto,
+        @Body()
+        data: Record<string, any>,
     ) {
         return this.postService.create(data);
     }
 
     @Patch()
     async update(
-        @Body(
-            new ValidationPipe({
-                transform: true,
-                forbidNonWhitelisted: true,
-                forbidUnknownValues: true,
-                validationError: { target: false },
-                groups: ['update'],
-            }),
-        )
-        data: UpdatePostDto,
+        @Body()
+        data: Record<string, any>,
     ) {
         return this.postService.update(data);
     }
 
     @Delete(':id')
-    async delete(@Param('id', new ParseIntPipe()) id: number) {
+    async delete(
+        @Param('id', new ParseIntPipe())
+        id: string,
+    ) {
         return this.postService.delete(id);
     }
 }

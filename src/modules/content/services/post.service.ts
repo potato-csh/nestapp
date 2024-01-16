@@ -1,8 +1,10 @@
 import { Injectable } from '@nestjs/common';
 
-import { IsNull, Not, SelectQueryBuilder } from 'typeorm';
+import { isFunction, isNil, omit } from 'lodash';
+import { EntityNotFoundError, IsNull, Not, SelectQueryBuilder } from 'typeorm';
 
-import { QueryHook } from '@/modules/database/types';
+import { paginate } from '@/modules/database/helpers';
+import { PaginateOptions, QueryHook } from '@/modules/database/types';
 
 import { PostOrderType } from '../constants';
 import { PostEntity } from '../entities/post.entity';
@@ -12,9 +14,57 @@ import { PostRepository } from '../repositories';
 export class PostService {
     constructor(protected respository: PostRepository) {}
 
-    // async paginate(options: PaginateOptions, callback?: QueryHook<PostEntity>) {
-    //     const qb = await this.
-    // }
+    /**
+     * 获取分页数据
+     * @param options
+     * @param callback
+     */
+    async paginate(options: PaginateOptions, callback?: QueryHook<PostEntity>) {
+        const qb = await this.buildListQuery(this.respository.buildBaseQB(), options, callback);
+        return paginate(qb, options);
+    }
+
+    /**
+     * 查询单篇文章
+     * @param id
+     * @param callback
+     */
+    async detail(id: string, callback?: QueryHook<PostEntity>) {
+        let qb = this.respository.buildBaseQB();
+        qb.where(`post.id = :id`, { id });
+        qb = !isNil(callback) && isFunction(callback) ? await callback(qb) : qb;
+        const item = await qb.getOne();
+        if (!item) throw new EntityNotFoundError(PostEntity, `The post ${id} not exist!`);
+        return item;
+    }
+
+    /**
+     * 创建文章
+     * @param data
+     */
+    async create(data: Record<string, any>) {
+        const item = await this.respository.save(data);
+
+        return this.detail(item.id);
+    }
+
+    /**
+     * 更新文章
+     * @param data
+     */
+    async update(data: Record<string, any>) {
+        await this.respository.update(data.id, omit(data, ['id']));
+        return this.detail(data.id);
+    }
+
+    /**
+     * 删除文章
+     * @param id
+     */
+    async delete(id: string) {
+        const item = await this.respository.findOneByOrFail({ id });
+        return this.respository.remove(item);
+    }
 
     /**
      * 构建文章列表查询器
@@ -28,15 +78,14 @@ export class PostService {
         callback?: QueryHook<PostEntity>,
     ) {
         const { orderBy, isPublished } = options;
-        let newQb = qb;
         if (typeof isPublished === 'boolean') {
-            newQb = isPublished
-                ? newQb.where({ publishedAt: Not(IsNull()) })
-                : newQb.where({ publishedAt: IsNull() });
+            isPublished
+                ? qb.where({ publishedAt: Not(IsNull()) })
+                : qb.where({ publishedAt: IsNull() });
         }
-        newQb = this.queryOrderBy(newQb, orderBy);
-        if (callback) return callback(newQb);
-        return newQb;
+        this.queryOrderBy(qb, orderBy);
+        if (callback) return callback(qb);
+        return qb;
     }
 
     /**
