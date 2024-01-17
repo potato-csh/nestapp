@@ -4,9 +4,10 @@ import { isFunction, isNil, omit } from 'lodash';
 import { EntityNotFoundError, IsNull, Not, SelectQueryBuilder } from 'typeorm';
 
 import { paginate } from '@/modules/database/helpers';
-import { PaginateOptions, QueryHook } from '@/modules/database/types';
+import { QueryHook } from '@/modules/database/types';
 
 import { PostOrderType } from '../constants';
+import { CreatePostDto, QueryPostDto, UpdatePostDto } from '../dtos';
 import { PostEntity } from '../entities/post.entity';
 import { PostRepository } from '../repositories';
 
@@ -19,7 +20,7 @@ export class PostService {
      * @param options
      * @param callback
      */
-    async paginate(options: PaginateOptions, callback?: QueryHook<PostEntity>) {
+    async paginate(options: QueryPostDto, callback?: QueryHook<PostEntity>) {
         const qb = await this.buildListQuery(this.respository.buildBaseQB(), options, callback);
         return paginate(qb, options);
     }
@@ -42,7 +43,7 @@ export class PostService {
      * 创建文章
      * @param data
      */
-    async create(data: Record<string, any>) {
+    async create(data: CreatePostDto) {
         const item = await this.respository.save(data);
 
         return this.detail(item.id);
@@ -52,7 +53,7 @@ export class PostService {
      * 更新文章
      * @param data
      */
-    async update(data: Record<string, any>) {
+    async update(data: UpdatePostDto) {
         await this.respository.update(data.id, omit(data, ['id']));
         return this.detail(data.id);
     }
