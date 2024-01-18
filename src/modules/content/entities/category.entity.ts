@@ -44,5 +44,5 @@ export class CategoryEntity extends BaseEntity {
     @Expose({ groups: ['category-tree'] })
     @TreeChildren({ cascade: true })
     @Type(() => CategoryEntity)
-    childern: Relation<CategoryEntity>[];
+    children: Relation<CategoryEntity>[];
 }

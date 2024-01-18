@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import { isFunction, isNil, omit } from 'lodash';
+import { isFunction, isNil } from 'lodash';
 import { EntityNotFoundError, IsNull, Not, SelectQueryBuilder } from 'typeorm';
 
 import { paginate } from '@/modules/database/helpers';
@@ -44,9 +44,8 @@ export class PostService {
      * @param data
      */
     async create(data: CreatePostDto) {
-        const item = await this.respository.save(data);
-
-        return this.detail(item.id);
+        // const item = await this.respository.save(data);
+        // return this.detail(item.id);
     }
 
     /**
@@ -54,8 +53,8 @@ export class PostService {
      * @param data
      */
     async update(data: UpdatePostDto) {
-        await this.respository.update(data.id, omit(data, ['id']));
-        return this.detail(data.id);
+        // await this.respository.update(data.id, omit(data, ['id']));
+        // return this.detail(data.id);
     }
 
     /**

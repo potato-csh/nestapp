@@ -47,6 +47,14 @@ export class QueryPostDto implements PaginateOptions {
     @IsNumber()
     @IsOptional()
     limit = 10;
+
+    @IsUUID(undefined, { message: 'ID格式错误' })
+    @IsOptional()
+    category?: string;
+
+    @IsUUID(undefined, { message: 'ID格式错误' })
+    @IsOptional()
+    tags?: string;
 }
 
 /**
@@ -55,7 +63,7 @@ export class QueryPostDto implements PaginateOptions {
 export class CreatePostDto {
     @MaxLength(255, {
         always: true,
-        message: '文章标题长度必须大于$constraint1',
+        message: '文章标题长度不得大于$constraint1',
     })
     @IsNotEmpty({ groups: ['create'], message: '文章标题必须填写' })
     @IsOptional({ groups: ['update'] })
@@ -67,7 +75,7 @@ export class CreatePostDto {
 
     @MaxLength(500, {
         always: true,
-        message: '文章描述长度必须大于$constraint1',
+        message: '文章描述长度不得大于$constraint1',
     })
     @IsOptional({ always: true })
     summary?: string;
@@ -75,7 +83,7 @@ export class CreatePostDto {
     @MaxLength(20, {
         each: true,
         always: true,
-        message: '每个关键字长度必须大于$constraint1',
+        message: '每个关键字长度不得大于$constraint1',
     })
     @IsOptional({ always: true })
     keyword?: string[];
@@ -91,8 +99,28 @@ export class CreatePostDto {
     @IsNumber(undefined, { always: true })
     @IsOptional({ always: true })
     customOrder = 0;
+
+    @IsUUID(undefined, {
+        each: true,
+        always: true,
+        message: 'ID格式错误',
+    })
+    @IsOptional({ groups: ['update'] })
+    category: string;
+
+    @IsUUID(undefined, {
+        each: true,
+        always: true,
+        message: 'ID格式错误',
+    })
+    @IsNotEmpty({ groups: ['create'], message: '分类必须设置' })
+    @IsOptional({ always: true })
+    tags?: string;
 }
 
+/**
+ * 文章更新验证
+ */
 export class UpdatePostDto extends PartialType(CreatePostDto) {
     @IsUUID(undefined, { groups: ['update'], message: '文章ID格式错误' })
     @IsDefined({ groups: ['update'], message: '文章ID必须指定' })

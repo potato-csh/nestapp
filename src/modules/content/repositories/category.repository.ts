@@ -1,3 +1,4 @@
+import { unset } from 'lodash';
 import { FindOptionsUtils, FindTreeOptions, TreeRepository } from 'typeorm';
 
 import { CustomRepository } from '@/modules/database/decorators';
@@ -39,10 +40,41 @@ export class CategoryRepository extends TreeRepository<CategoryEntity> {
      * @param entities
      * @param options
      */
-    findDescendants(entities: CategoryEntity, options?: FindTreeOptions) {
-        const qb = this.createDescendantsQueryBuilder('category', 'treeClosure', entities);
+    findDescendants(entity: CategoryEntity, options?: FindTreeOptions) {
+        const qb = this.createDescendantsQueryBuilder('category', 'treeClosure', entity);
         FindOptionsUtils.applyOptionsToTreeQueryBuilder(qb, options);
         qb.orderBy('category.customOrder', 'ASC');
         return qb.getMany();
+    }
+
+    /**
+     * 查询祖先分类
+     * @param entity
+     * @param options
+     */
+    findAncestors(entity: CategoryEntity, options?: FindTreeOptions) {
+        const qb = this.createAncestorsQueryBuilder('category', 'treeClosure', entity);
+        FindOptionsUtils.applyOptionsToTreeQueryBuilder(qb, options);
+        qb.orderBy('category.customOrder', 'ASC');
+        return qb.getMany();
+    }
+
+    /**
+     * 打开并展开树
+     * @param trees
+     * @param depth
+     * @param parent
+     */
+    async toFlatTrees(trees: CategoryEntity[], depth = 0, parent: CategoryEntity | null = null) {
+        const data: Omit<CategoryEntity, 'children'>[] = [];
+        for (const item of trees) {
+            item.depth = depth;
+            item.parent = parent;
+            const { children } = item;
+            unset(item, 'children');
+            data.push(item);
+            data.push(...(await this.toFlatTrees(children, depth + 1, item)));
+        }
+        return data as CategoryEntity[];
     }
 }
