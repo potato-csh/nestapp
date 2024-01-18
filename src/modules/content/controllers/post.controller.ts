@@ -5,43 +5,58 @@ import {
     Get,
     Param,
     ParseIntPipe,
+    ParseUUIDPipe,
     Patch,
     Post,
+    Query,
+    SerializeOptions,
+    UseInterceptors,
     ValidationPipe,
 } from '@nestjs/common';
 
-import { CreatePostDto } from '../dtos/create-post.dto';
-import { UpdatePostDto } from '../dtos/update-post.dto';
+import { AppIntercepter } from '@/modules/core/providers';
+
+import { CreatePostDto, QueryPostDto, UpdatePostDto } from '../dtos';
 import { PostService } from '../services/post.service';
 
-// const posts: PostEntity[] = [
-//     { title: '第一篇文章标题', body: '第一篇文章内容' },
-//     { title: '第二篇文章标题', body: '第二篇文章内容' },
-//     { title: '第三篇文章标题', body: '第三篇文章内容' },
-//     { title: '第四篇文章标题', body: '第四篇文章内容' },
-//     { title: '第五篇文章标题', body: '第五篇文章内容' },
-//     { title: '第六篇文章标题', body: '第六篇文章内容' },
-// ].map((v, id) => ({ ...v, id }));
-
+@UseInterceptors(AppIntercepter)
 @Controller('posts')
 export class PostController {
     constructor(private postService: PostService) {}
 
     @Get()
-    async index() {
-        return this.postService.findAll();
+    @SerializeOptions({ groups: ['post-list'] })
+    async list(
+        @Query(
+            new ValidationPipe({
+                transform: true,
+                whitelist: true,
+                forbidNonWhitelisted: true,
+                forbidUnknownValues: true,
+                validationError: { target: false },
+            }),
+        )
+        options: QueryPostDto,
+    ) {
+        return this.postService.paginate(options);
     }
 
     @Get(':id')
-    async show(@Param('id', new ParseIntPipe()) id: number) {
-        return this.postService.findOne(id);
+    @SerializeOptions({ groups: ['post-detail'] })
+    async detail(
+        @Param('id', new ParseUUIDPipe())
+        id: string,
+    ) {
+        return this.postService.detail(id);
     }
 
     @Post()
+    @SerializeOptions({ groups: ['post-detail'] })
     async store(
         @Body(
             new ValidationPipe({
                 transform: true,
+                whitelist: true,
                 forbidNonWhitelisted: true,
                 forbidUnknownValues: true,
                 validationError: { target: false },
@@ -54,10 +69,12 @@ export class PostController {
     }
 
     @Patch()
+    @SerializeOptions({ groups: ['post-detail'] })
     async update(
         @Body(
             new ValidationPipe({
                 transform: true,
+                whitelist: true,
                 forbidNonWhitelisted: true,
                 forbidUnknownValues: true,
                 validationError: { target: false },
@@ -70,7 +87,11 @@ export class PostController {
     }
 
     @Delete(':id')
-    async delete(@Param('id', new ParseIntPipe()) id: number) {
+    @SerializeOptions({ groups: ['post-detail'] })
+    async delete(
+        @Param('id', new ParseIntPipe())
+        id: string,
+    ) {
         return this.postService.delete(id);
     }
 }
