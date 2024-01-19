@@ -13,7 +13,7 @@ import { PostRepository } from '../repositories';
 
 @Injectable()
 export class PostService {
-    constructor(protected respository: PostRepository) {}
+    constructor(protected repository: PostRepository) {}
 
     /**
      * 获取分页数据
@@ -21,7 +21,7 @@ export class PostService {
      * @param callback
      */
     async paginate(options: QueryPostDto, callback?: QueryHook<PostEntity>) {
-        const qb = await this.buildListQuery(this.respository.buildBaseQB(), options, callback);
+        const qb = await this.buildListQuery(this.repository.buildBaseQB(), options, callback);
         return paginate(qb, options);
     }
 
@@ -31,7 +31,7 @@ export class PostService {
      * @param callback
      */
     async detail(id: string, callback?: QueryHook<PostEntity>) {
-        let qb = this.respository.buildBaseQB();
+        let qb = this.repository.buildBaseQB();
         qb.where(`post.id = :id`, { id });
         qb = !isNil(callback) && isFunction(callback) ? await callback(qb) : qb;
         const item = await qb.getOne();
@@ -62,8 +62,8 @@ export class PostService {
      * @param id
      */
     async delete(id: string) {
-        const item = await this.respository.findOneByOrFail({ id });
-        return this.respository.remove(item);
+        const item = await this.repository.findOneByOrFail({ id });
+        return this.repository.remove(item);
     }
 
     /**
