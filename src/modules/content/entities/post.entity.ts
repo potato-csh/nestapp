@@ -68,6 +68,12 @@ export class PostEntity extends BaseEntity {
     @UpdateDateColumn({ comment: '更新时间' })
     updatedAt: Date;
 
+    /**
+     * 通过queryBuilder生成的评论数量(虚拟字段)
+     */
+    @Expose()
+    commentCount: number;
+
     @Expose()
     @ManyToOne(() => CategoryEntity, (category) => category.posts, {
         nullable: true,

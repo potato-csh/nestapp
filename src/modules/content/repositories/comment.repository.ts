@@ -43,7 +43,7 @@ export class CommentRepository extends TreeRepository<CommentEntity> {
      * 查询顶级评论
      * @param options
      */
-    findRoots(options?: FindCommentTreeOptions) {
+    findRoots(options: FindCommentTreeOptions = {}) {
         const { addQuery, ...rest } = options;
         const escapeAlias = (alias: string) => this.manager.connection.driver.escape(alias);
         const escapeColumn = (column: string) => this.manager.connection.driver.escape(column);
@@ -53,7 +53,7 @@ export class CommentRepository extends TreeRepository<CommentEntity> {
 
         let qb = this.buildBaseQB(this.createQueryBuilder('comment'));
         FindOptionsUtils.applyOptionsToTreeQueryBuilder(qb, rest);
-        qb.where(`${escapeAlias('category')}.${escapeColumn(parentPropertyName)} IS NULL`);
+        qb.where(`${escapeAlias('comment')}.${escapeColumn(parentPropertyName)} IS NULL`);
         qb = addQuery ? addQuery(qb) : qb;
         return qb.getMany();
     }

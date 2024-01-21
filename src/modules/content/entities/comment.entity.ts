@@ -32,7 +32,8 @@ export class CommentEntity extends BaseEntity {
 
     @ManyToOne(() => PostEntity, (post) => post.comments, {
         // 文章不能为空
-        nullable: true,
+        nullable: false,
+        // 跟随父表删除与更新
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE',
     })

@@ -54,7 +54,7 @@ export class QueryPostDto implements PaginateOptions {
 
     @IsUUID(undefined, { message: 'ID格式错误' })
     @IsOptional()
-    tags?: string;
+    tag?: string;
 }
 
 /**

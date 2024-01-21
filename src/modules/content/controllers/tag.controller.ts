@@ -1,31 +1,30 @@
 import {
-    Body,
-    Controller,
-    Delete,
-    Get,
-    Param,
-    ParseIntPipe,
-    ParseUUIDPipe,
-    Patch,
-    Post,
-    Query,
-    SerializeOptions,
     UseInterceptors,
+    Controller,
+    Get,
+    SerializeOptions,
+    Query,
     ValidationPipe,
+    Param,
+    ParseUUIDPipe,
+    Post,
+    Body,
+    Patch,
+    Delete,
 } from '@nestjs/common';
 
 import { AppIntercepter } from '@/modules/core/providers';
 
-import { CreatePostDto, QueryPostDto, UpdatePostDto } from '../dtos';
-import { PostService } from '../services/post.service';
+import { QueryCategoryDto, CreateTagDto, UpdateTagDto } from '../dtos';
+import { TagService } from '../services';
 
 @UseInterceptors(AppIntercepter)
-@Controller('posts')
-export class PostController {
-    constructor(protected postService: PostService) {}
+@Controller('tags')
+export class TagController {
+    constructor(protected service: TagService) {}
 
     @Get()
-    @SerializeOptions({ groups: ['post-list'] })
+    @SerializeOptions({})
     async list(
         @Query(
             new ValidationPipe({
@@ -36,22 +35,22 @@ export class PostController {
                 validationError: { target: false },
             }),
         )
-        options: QueryPostDto,
+        options: QueryCategoryDto,
     ) {
-        return this.postService.paginate(options);
+        return this.service.paginate(options);
     }
 
     @Get(':id')
-    @SerializeOptions({ groups: ['post-detail'] })
+    @SerializeOptions({})
     async detail(
         @Param('id', new ParseUUIDPipe())
         id: string,
     ) {
-        return this.postService.detail(id);
+        return this.service.detail(id);
     }
 
     @Post()
-    @SerializeOptions({ groups: ['post-detail'] })
+    @SerializeOptions({})
     async store(
         @Body(
             new ValidationPipe({
@@ -63,13 +62,13 @@ export class PostController {
                 groups: ['create'],
             }),
         )
-        data: CreatePostDto,
+        data: CreateTagDto,
     ) {
-        return this.postService.create(data);
+        return this.service.create(data);
     }
 
     @Patch()
-    @SerializeOptions({ groups: ['post-detail'] })
+    @SerializeOptions({})
     async update(
         @Body(
             new ValidationPipe({
@@ -81,17 +80,14 @@ export class PostController {
                 groups: ['update'],
             }),
         )
-        data: UpdatePostDto,
+        data: UpdateTagDto,
     ) {
-        return this.postService.update(data);
+        return this.service.update(data);
     }
 
     @Delete(':id')
-    @SerializeOptions({ groups: ['post-detail'] })
-    async delete(
-        @Param('id', new ParseIntPipe())
-        id: string,
-    ) {
-        return this.postService.delete(id);
+    @SerializeOptions({})
+    async delete(@Param('id', new ParseUUIDPipe()) id: string) {
+        return this.service.delete(id);
     }
 }
