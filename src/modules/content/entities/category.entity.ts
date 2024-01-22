@@ -1,6 +1,7 @@
 import { Exclude, Expose, Type } from 'class-transformer';
 import {
     BaseEntity,
+    Column,
     Entity,
     OneToMany,
     PrimaryColumn,
@@ -21,11 +22,11 @@ export class CategoryEntity extends BaseEntity {
     id: string;
 
     @Expose()
-    @PrimaryColumn({ comment: '分类名称' })
+    @Column({ comment: '分类名称' })
     name: string;
 
     @Expose({ groups: ['category-tree', 'category-list', 'category-detail'] })
-    @PrimaryColumn({ comment: '分类排序', default: 0 })
+    @Column({ comment: '分类排序', default: 0 })
     customOrder: number;
 
     @OneToMany(() => PostEntity, (post) => post.category, {

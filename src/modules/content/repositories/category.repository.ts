@@ -16,17 +16,19 @@ export class CategoryRepository extends TreeRepository<CategoryEntity> {
      * @param options
      */
     findRoots(options?: FindTreeOptions) {
+        // 防止sql注入攻击
         const escapeAlias = (alias: string) => this.manager.connection.driver.escape(alias);
         const escapeColumn = (column: string) => this.manager.connection.driver.escape(column);
 
         // 获取树状结构的父子关系的连接列信息
         const joinColumn = this.metadata.treeParentRelation!.joinColumns[0];
+        // 获取父节点属性的名称，可能是数据库的列名
         const parentPropertyName = joinColumn.givenDatabaseName || joinColumn.databaseName;
 
         // 构建基本的查询器，并安装'category.customOrder' 升序排序
         const qb = this.buildBaseQB().orderBy('category.customOrder', 'ASC');
 
-        // 将选项应用于查询构建器
+        // 将树状查询选项应用于查询构建器
         FindOptionsUtils.applyOptionsToTreeQueryBuilder(qb, options);
 
         // 在查询构建器中添加条件，找到没有父节点的根节点
