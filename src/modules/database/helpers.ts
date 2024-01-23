@@ -37,7 +37,7 @@ export const paginate = async <E extends ObjectLiteral>(
 };
 
 /**
- * 数据分页函数
+ * 树形分页函数
  * @param options
  * @param data
  */
