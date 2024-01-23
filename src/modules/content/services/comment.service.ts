@@ -23,13 +23,13 @@ export class CommentService {
     async findTrees(options: QueryCommentTreeDto = {}) {
         return this.repository.findTrees({
             addQuery: (qb) => {
-                return isNil(options.post) ? qb : qb.where('post.id = : id', { id: options.post });
+                return isNil(options.post) ? qb : qb.where('post.id = :id', { id: options.post });
             },
         });
     }
 
     /**
-     * 查询一片文章的评论并分页
+     * 查询一篇文章的评论并分页
      * @param dto
      */
     async paginate(dto: QueryCommentDto) {
