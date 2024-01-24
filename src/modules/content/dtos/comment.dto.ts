@@ -13,6 +13,7 @@ import {
 
 import { toNumber } from 'lodash';
 
+import { DtoValidation } from '@/modules/core/decorators';
 import { PaginateOptions } from '@/modules/database/types';
 
 export class QueryCommentDto implements PaginateOptions {
@@ -38,6 +39,7 @@ export class QueryCommentDto implements PaginateOptions {
  */
 export class QueryCommentTreeDto extends PickType(QueryCommentDto, ['post']) {}
 
+@DtoValidation({ groups: ['create'] })
 export class CreateCommentDto {
     @MaxLength(1000, { message: '评论内容长度不得大于$constraint1个字' })
     @IsNotEmpty({ groups: ['create'], message: '评论内容不得为空' })

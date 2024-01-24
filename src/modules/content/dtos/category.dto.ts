@@ -12,6 +12,7 @@ import {
 } from 'class-validator';
 import { toNumber } from 'lodash';
 
+import { DtoValidation } from '@/modules/core/decorators';
 import { PaginateOptions } from '@/modules/database/types';
 
 export class QueryCategoryDto implements PaginateOptions {
@@ -28,6 +29,7 @@ export class QueryCategoryDto implements PaginateOptions {
     limit = 10;
 }
 
+@DtoValidation({ groups: ['create'] })
 export class CreateCategoryDto {
     @MaxLength(25, {
         always: true,
@@ -50,6 +52,7 @@ export class CreateCategoryDto {
     customOrder = 0;
 }
 
+@DtoValidation({ groups: ['update'] })
 export class UpdateCategoryDto extends PartialType(CreateCategoryDto) {
     @IsUUID(undefined, { groups: ['update'], message: 'ID格式错误' })
     @IsDefined({ groups: ['update'], message: 'ID必须指定' })

@@ -11,6 +11,7 @@ import {
 } from 'class-validator';
 import { toNumber } from 'lodash';
 
+import { DtoValidation } from '@/modules/core/decorators';
 import { PaginateOptions } from '@/modules/database/types';
 
 export class QueryTagDto implements PaginateOptions {
@@ -27,6 +28,7 @@ export class QueryTagDto implements PaginateOptions {
     limit = 10;
 }
 
+@DtoValidation({ groups: ['create'] })
 export class CreateTagDto {
     @MaxLength(255, {
         always: true,
@@ -44,6 +46,7 @@ export class CreateTagDto {
     description?: string;
 }
 
+@DtoValidation({ groups: ['update'] })
 export class UpdateTagDto extends PartialType(CreateTagDto) {
     @IsUUID(undefined, {
         groups: ['update'],
