@@ -14,6 +14,7 @@ import { toNumber } from 'lodash';
 import { DtoValidation } from '@/modules/core/decorators';
 import { PaginateOptions } from '@/modules/database/types';
 
+@DtoValidation({ type: 'query' })
 export class QueryTagDto implements PaginateOptions {
     @Transform(({ value }) => toNumber(value))
     @Min(1, { message: '当前页必须大于1' })

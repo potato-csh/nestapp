@@ -25,6 +25,7 @@ import { PostOrderType } from '../constants';
 /**
  * 文章分页查询验证
  */
+@DtoValidation({ type: 'query' })
 export class QueryPostDto implements PaginateOptions {
     @Transform(({ value }) => toBoolean(value))
     @IsBoolean()

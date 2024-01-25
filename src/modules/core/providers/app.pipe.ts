@@ -10,10 +10,10 @@ import { deepMerge } from '../helpers';
  */
 export class AppPipe extends ValidationPipe {
     async transform(value: any, metadata: ArgumentMetadata) {
+        // metatype: [class QueryCategoryDto] | [Function: String]
         // type: 'body' | 'query' | 'param' | 'custom'
         const { metatype, type } = metadata;
         // 获取要验证的dto类
-        // metatype: (e.g., `String`)
         const dto = metatype as any;
         // 获取dto类的装饰器元数据中的自定义验证选项
         const options = Reflect.getMetadata(DTO_VALIDATION_OPTIONS, dto) || {};
