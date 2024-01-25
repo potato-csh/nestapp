@@ -2,6 +2,8 @@ import { NestFactory } from '@nestjs/core';
 
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 
+import { useContainer } from 'class-validator';
+
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -14,6 +16,10 @@ async function bootstrap() {
     });
     // 设置全局访问前缀
     app.setGlobalPrefix('api');
+    // 使validator的约束可以使用nestjs的容器
+    useContainer(app.select(AppModule), {
+        fallbackOnErrors: true,
+    });
     // 启动后的输出
     await app.listen(3100, () => {
         console.log('api: http://localhost:3100/api');
