@@ -12,8 +12,11 @@ import {
 } from 'class-validator';
 import { toNumber } from 'lodash';
 
+import { IsDataExist } from '@/modules/core/constraints/data.exist.constraint';
 import { DtoValidation } from '@/modules/core/decorators';
 import { PaginateOptions } from '@/modules/database/types';
+
+import { CategoryEntity } from '../entities/category.entity';
 
 @DtoValidation({ type: 'query' })
 export class QueryCategoryDto implements PaginateOptions {
@@ -40,6 +43,7 @@ export class CreateCategoryDto {
     @IsOptional({ groups: ['update'] })
     name: string;
 
+    @IsDataExist(CategoryEntity, { always: true, message: '父分类不存在' })
     @IsUUID(undefined, { always: true, message: '父分类ID格式错误' })
     @ValidateIf((value) => value.parent !== null && value.parent)
     @IsOptional({ always: true })

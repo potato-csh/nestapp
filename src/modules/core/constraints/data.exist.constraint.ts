@@ -3,7 +3,6 @@ import {
     ValidationOptions,
     ValidatorConstraint,
     ValidatorConstraintInterface,
-    ValidatorOptions,
     registerDecorator,
 } from 'class-validator';
 import { DataSource, ObjectType, Repository } from 'typeorm';
@@ -55,7 +54,7 @@ export class DataExistConstraint implements ValidatorConstraintInterface {
  */
 function IsDataExist(
     entity: ObjectType<any>,
-    validationOptions?: ValidatorOptions,
+    validationOptions?: ValidationOptions,
 ): (object: Record<string, any>, propertyName: string) => void;
 
 /**
