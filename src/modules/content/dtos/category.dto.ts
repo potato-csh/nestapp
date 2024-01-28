@@ -13,6 +13,8 @@ import {
 import { toNumber } from 'lodash';
 
 import { IsDataExist } from '@/modules/core/constraints/data.exist.constraint';
+import { IsTreeUniqueExist } from '@/modules/core/constraints/tree.exist.contraint';
+import { IsTreeUnique } from '@/modules/core/constraints/tree.unique.constraint';
 import { DtoValidation } from '@/modules/core/decorators';
 import { PaginateOptions } from '@/modules/database/types';
 
@@ -35,6 +37,14 @@ export class QueryCategoryDto implements PaginateOptions {
 
 @DtoValidation({ groups: ['create'] })
 export class CreateCategoryDto {
+    @IsTreeUnique(CategoryEntity, {
+        groups: ['create'],
+        message: '分类名称重复',
+    })
+    @IsTreeUniqueExist(CategoryEntity, {
+        groups: ['update'],
+        message: '名称重复',
+    })
     @MaxLength(25, {
         always: true,
         message: '分类名称不得大于$constraint1',

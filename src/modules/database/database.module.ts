@@ -5,6 +5,9 @@ import { DataSource, ObjectType } from 'typeorm';
 
 import { DataExistConstraint } from '../core/constraints';
 
+import { UniqueTreeExistConstraint } from '../core/constraints/tree.exist.contraint';
+import { UniqueTreeConstraint } from '../core/constraints/tree.unique.constraint';
+
 import { CUSTOM_REPOSITORY_METADETA } from './constants';
 
 @Module({})
@@ -14,7 +17,7 @@ export class DatabaseModule {
             module: DatabaseModule,
             global: true,
             imports: [TypeOrmModule.forRoot(configRegister())],
-            providers: [DataExistConstraint],
+            providers: [DataExistConstraint, UniqueTreeConstraint, UniqueTreeExistConstraint],
         };
     }
 
