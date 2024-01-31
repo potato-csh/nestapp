@@ -1,14 +1,6 @@
-import {
-    Controller,
-    Get,
-    SerializeOptions,
-    Query,
-    Post,
-    Body,
-    Delete,
-    Param,
-    ParseUUIDPipe,
-} from '@nestjs/common';
+import { Controller, Get, SerializeOptions, Query, Post, Body, Delete } from '@nestjs/common';
+
+import { DeleteDto } from '@/modules/restful/dtos/delete.dto';
 
 import { QueryCommentTreeDto, QueryCommentDto, CreateCommentDto } from '../dtos';
 import { CommentService } from '../services';
@@ -44,9 +36,13 @@ export class CommentController {
         return this.service.create(data);
     }
 
-    @Delete(':id')
-    @SerializeOptions({ groups: ['comment-detail'] })
-    async delete(@Param('id', new ParseUUIDPipe()) id: string) {
-        return this.service.delete(id);
+    @Delete()
+    @SerializeOptions({ groups: ['comment-list'] })
+    async delete(
+        @Body()
+        data: DeleteDto,
+    ) {
+        const { ids } = data;
+        return this.service.delete(ids);
     }
 }

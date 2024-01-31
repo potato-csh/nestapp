@@ -1,8 +1,9 @@
-import { Exclude, Expose } from 'class-transformer';
+import { Exclude, Expose, Type } from 'class-transformer';
 import {
     BaseEntity,
     Column,
     CreateDateColumn,
+    DeleteDateColumn,
     Entity,
     JoinTable,
     ManyToMany,
@@ -67,6 +68,11 @@ export class PostEntity extends BaseEntity {
     @Expose()
     @UpdateDateColumn({ comment: '更新时间' })
     updatedAt: Date;
+
+    @Expose()
+    @Type(() => Date)
+    @DeleteDateColumn({ comment: '删除时间' })
+    deletedAt: Date;
 
     /**
      * 通过queryBuilder生成的评论数量(虚拟字段)

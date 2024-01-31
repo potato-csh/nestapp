@@ -2,6 +2,7 @@ import { PartialType } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import {
     IsDefined,
+    IsEnum,
     IsNotEmpty,
     IsNumber,
     IsOptional,
@@ -16,12 +17,20 @@ import { IsDataExist } from '@/modules/core/constraints/data.exist.constraint';
 import { IsTreeUniqueExist } from '@/modules/core/constraints/tree.exist.contraint';
 import { IsTreeUnique } from '@/modules/core/constraints/tree.unique.constraint';
 import { DtoValidation } from '@/modules/core/decorators';
+import { SelectTrashMode } from '@/modules/database/constants';
 import { PaginateOptions } from '@/modules/database/types';
 
 import { CategoryEntity } from '../entities/category.entity';
 
 @DtoValidation({ type: 'query' })
-export class QueryCategoryDto implements PaginateOptions {
+export class QueryCategoryTreeDto {
+    @IsEnum(SelectTrashMode)
+    @IsOptional()
+    trashed?: SelectTrashMode;
+}
+
+@DtoValidation({ type: 'query' })
+export class QueryCategoryDto extends QueryCategoryTreeDto implements PaginateOptions {
     @Transform(({ value }) => toNumber(value))
     @Min(1, { message: '当前页必须大于1' })
     @IsNumber()

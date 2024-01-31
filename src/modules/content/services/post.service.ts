@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { Omit, isArray, isFunction, isNil, omit } from 'lodash';
 import { EntityNotFoundError, In, IsNull, Not, SelectQueryBuilder } from 'typeorm';
 
+import { SelectTrashMode } from '@/modules/database/constants';
 import { paginate } from '@/modules/database/helpers';
 import { QueryHook } from '@/modules/database/types';
 
@@ -103,9 +104,39 @@ export class PostService {
      * 删除文章
      * @param id
      */
-    async delete(id: string) {
-        const item = await this.repository.findOneByOrFail({ id });
-        return this.repository.remove(item);
+    async delete(ids: string[], trash?: boolean) {
+        const items = await this.repository.find({
+            where: { id: In(ids) },
+            withDeleted: true,
+        });
+        if (trash) {
+            const directs = items.filter((item) => !isNil(item.deletedAt));
+            const softs = items.filter((item) => isNil(item.deletedAt));
+            return [
+                ...(await this.repository.remove(directs)),
+                ...(await this.repository.softRemove(softs)),
+            ];
+        }
+        return this.repository.remove(items);
+    }
+
+    /**
+     * 恢复文章
+     * @param ids
+     */
+    async restore(ids: string[]) {
+        const items = await this.repository.find({
+            where: { id: In(ids) },
+            withDeleted: true,
+        });
+        // 过滤掉不在回收站中的数据
+        const trasheds = items.filter((item) => !isNil(item)).map((item) => item.id);
+        if (trasheds.length < 1) return [];
+        await this.repository.restore(trasheds);
+        const qb = await this.buildListQuery(this.repository.buildBaseQB(), {}, async (qbuilder) =>
+            qbuilder.andWhereInIds(trasheds),
+        );
+        return qb.getMany();
     }
 
     /**
@@ -119,7 +150,12 @@ export class PostService {
         options: FindParams,
         callback?: QueryHook<PostEntity>,
     ) {
-        const { category, tag, orderBy, isPublished } = options;
+        const { category, tag, orderBy, isPublished, trashed } = options;
+        // 是否查询回收站
+        if (trashed === SelectTrashMode.ALL || trashed === SelectTrashMode.ONLY) {
+            qb.withDeleted();
+            if (trashed === SelectTrashMode.ONLY) qb.where(`post.deletedAt IS NOT  NUll`);
+        }
         if (typeof isPublished === 'boolean') {
             isPublished
                 ? qb.where({ publishedAt: Not(IsNull()) })
