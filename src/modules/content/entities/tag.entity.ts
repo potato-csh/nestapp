@@ -4,6 +4,7 @@ import {
     Column,
     DeleteDateColumn,
     Entity,
+    Index,
     ManyToMany,
     PrimaryColumn,
     Relation,
@@ -20,6 +21,7 @@ export class TagEntity extends BaseEntity {
 
     @Expose()
     @Column({ comment: '标签名称' })
+    @Index({ fulltext: true })
     name: string;
 
     @Expose()

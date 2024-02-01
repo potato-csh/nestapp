@@ -50,7 +50,6 @@ export class CommentRepository extends TreeRepository<CommentEntity> {
 
         const joinColumn = this.metadata.treeParentRelation!.joinColumns[0];
         const parentPropertyName = joinColumn.givenDatabaseName || joinColumn.databaseName;
-
         let qb = this.buildBaseQB(this.createQueryBuilder('comment'));
         FindOptionsUtils.applyOptionsToTreeQueryBuilder(qb, rest);
         qb.where(`${escapeAlias('comment')}.${escapeColumn(parentPropertyName)} IS NULL`);

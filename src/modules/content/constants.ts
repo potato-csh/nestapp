@@ -16,3 +16,8 @@ export enum PostOrderType {
     COMMENTCOUNT = 'commentCount',
     CUSTOM = 'custom',
 }
+
+/**
+ * 全文搜索模式
+ */
+export type SearchType = 'like' | 'against';

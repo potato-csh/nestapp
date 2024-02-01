@@ -57,8 +57,8 @@ export class CreateCommentDto {
         message: '父评论不存在',
     })
     @IsUUID(undefined, { always: true, message: 'ID格式错误' })
-    @ValidateIf(({ value }) => value.parent !== null && value.parent)
+    @ValidateIf((value) => value.parent !== null && value.parent)
     @IsOptional({ always: true })
-    @Transform(({ value }) => (value.parent === 'null' ? null : value))
+    @Transform(({ value }) => (value === 'null' ? null : value))
     parent?: string;
 }
