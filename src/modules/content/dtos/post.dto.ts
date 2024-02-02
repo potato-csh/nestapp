@@ -77,6 +77,7 @@ export class QueryPostDto implements PaginateOptions {
         always: true,
         message: '搜索字符串长度不得超过$constraint1',
     })
+    @IsOptional({ always: true })
     search?: string;
 }
 
@@ -138,6 +139,7 @@ export class CreatePostDto {
 
     @IsDataExist(TagEntity, {
         always: true,
+        each: true,
         message: '标签不存在',
     })
     @IsUUID(undefined, {
@@ -145,9 +147,8 @@ export class CreatePostDto {
         always: true,
         message: 'ID格式错误',
     })
-    @IsNotEmpty({ groups: ['create'], message: '分类必须设置' })
     @IsOptional({ always: true })
-    tags?: string;
+    tags?: string[];
 }
 
 /**
