@@ -93,8 +93,8 @@ export class SearchService {
         } else if (options.trashed === SelectTrashMode.ONLY) {
             filter = ['deletedAt NOT IS NULL'];
         }
-        if (!isNil(options.isPublished)) {
-            filter.push(options.isPublished ? 'published IS NOT NULL' : 'deletedAt IS NULL');
+        if (options.isPublished) {
+            filter.push('published IS NOT NULL');
         }
         const result = await this.client.index(this.index).search(text, {
             page,
