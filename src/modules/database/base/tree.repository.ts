@@ -1,4 +1,4 @@
-import { isNil, unset } from 'lodash';
+import { isNil, pick, unset } from 'lodash';
 import {
     EntityManager,
     EntityTarget,
@@ -27,7 +27,7 @@ export abstract class BaseTreeRepository<E extends ObjectLiteral> extends TreeRe
     /**
      * 查询器名称
      */
-    protected _qbName = 'treeEntity';
+    // protected _qbName = 'treeEntity';
 
     /**
      * 删除父分类后提升子分类的等级
@@ -87,6 +87,33 @@ export abstract class BaseTreeRepository<E extends ObjectLiteral> extends TreeRe
     }
 
     /**
+     * 查询顶级分类
+     * @param options
+     */
+    async findRoots(options?: FindTreeOptions & QueryParams<E>) {
+        const { addQuery, orderBy, withTrashed, onlyTrashed } = options ?? {};
+
+        // 防止sql注入攻击
+        const escapeAlias = (alias: string) => this.manager.connection.driver.escape(alias);
+        const escapeColumn = (column: string) => this.manager.connection.driver.escape(column);
+
+        // 获取树状结构的父子关系的连接列信息
+        const joinColumn = this.metadata.treeParentRelation!.joinColumns[0];
+        // 获取父节点属性的名称，可能是数据库的列名
+        const parentPropertyName = joinColumn.givenDatabaseName || joinColumn.databaseName;
+
+        let qb = this.addOrderByQuery(this.buildBaseQB(), orderBy);
+        qb.where(`${escapeAlias(this.qbName)}.${escapeColumn(parentPropertyName)} IS NULL`);
+        FindOptionsUtils.applyOptionsToTreeQueryBuilder(qb, pick(options, ['relations', 'depth']));
+        qb = addQuery ? await addQuery(qb) : qb;
+        if (withTrashed) {
+            qb.withDeleted();
+            if (onlyTrashed) qb.where(`${this.qbName}.deletedAt IS NOT NULL`);
+        }
+        return qb.getMany();
+    }
+
+    /**
      * 查询后代树
      * @param entity
      * @param options
@@ -124,6 +151,116 @@ export abstract class BaseTreeRepository<E extends ObjectLiteral> extends TreeRe
         );
 
         return entity;
+    }
+
+    /**
+     * 查询祖先树
+     * @param entity
+     * @param options
+     */
+    async findAncestorsTree(entity: E, options?: FindTreeOptions & QueryParams<E>) {
+        const { addQuery, orderBy, withTrashed, onlyTrashed } = options ?? {};
+        let qb = this.createAncestorsQueryBuilder(this.qbName, 'treeClosure', entity);
+        qb = addQuery
+            ? await addQuery(this.addOrderByQuery(qb, orderBy))
+            : this.addOrderByQuery(qb, orderBy);
+        if (withTrashed) {
+            qb.withDeleted();
+            if (onlyTrashed) qb.where(`${this.qbName}.deletedAt IS NOT NULL`);
+        }
+        FindOptionsUtils.applyOptionsToTreeQueryBuilder(qb, options);
+
+        const entities = await qb.getRawAndEntities();
+        const relationMaps = TreeRepositoryUtils.createRelationMaps(
+            this.manager,
+            this.metadata,
+            'treeEntity',
+            entities.raw,
+        );
+        TreeRepositoryUtils.buildParentEntityTree(
+            this.metadata,
+            entity,
+            entities.entities,
+            relationMaps,
+        );
+
+        return entity;
+    }
+
+    /**
+     * 查询后代元素
+     * @param entity
+     * @param options
+     */
+    async findDescendants(entity: E, options?: FindTreeOptions & QueryParams<E>) {
+        const { addQuery, orderBy, withTrashed, onlyTrashed } = options ?? {};
+        let qb = this.buildBaseQB(
+            this.createDescendantsQueryBuilder(this.qbName, 'treeClosure', entity),
+        );
+        qb = addQuery
+            ? await addQuery(this.addOrderByQuery(qb, orderBy))
+            : this.addOrderByQuery(qb, orderBy);
+        if (withTrashed) {
+            qb.withDeleted();
+            if (onlyTrashed) qb.where(`${this.qbName}.deletedAt IS NOT NULL`);
+        }
+        FindOptionsUtils.applyOptionsToTreeQueryBuilder(qb, options);
+        return qb.getMany();
+    }
+
+    /**
+     * 查询祖先元素
+     * @param entity
+     * @param options
+     */
+    async findAncestors(entity: E, options?: FindTreeOptions & QueryParams<E>) {
+        const { addQuery, orderBy, withTrashed, onlyTrashed } = options ?? {};
+        let qb = this.createAncestorsQueryBuilder(this.qbName, 'treeClosure', entity);
+        qb = addQuery
+            ? await addQuery(this.addOrderByQuery(qb, orderBy))
+            : this.addOrderByQuery(qb, orderBy);
+        if (withTrashed) {
+            qb.withDeleted();
+            if (onlyTrashed) qb.where(`${this.qbName}.deletedAt IS NOT NULL`);
+        }
+        FindOptionsUtils.applyOptionsToTreeQueryBuilder(qb, options);
+        return qb.getMany();
+    }
+
+    /**
+     * 统计后代元素数量
+     * @param entity
+     * @param options
+     */
+    async countDescendants(entity: E, options?: FindTreeOptions & QueryParams<E>) {
+        const { addQuery, orderBy, withTrashed, onlyTrashed } = options ?? {};
+        let qb = this.createDescendantsQueryBuilder(this.qbName, 'treeClosure', entity);
+        qb = addQuery
+            ? await addQuery(this.addOrderByQuery(qb, orderBy))
+            : this.addOrderByQuery(qb, orderBy);
+        if (withTrashed) {
+            qb.withDeleted();
+            if (onlyTrashed) qb.where(`${this.qbName}.deletedAt IS NOT NULL`);
+        }
+        return qb.getCount();
+    }
+
+    /**
+     * 统计祖先元素数量
+     * @param entity
+     * @param options
+     */
+    async countAncestors(entity: E, options?: FindTreeOptions & QueryParams<E>) {
+        const { addQuery, orderBy, withTrashed, onlyTrashed } = options ?? {};
+        let qb = this.createAncestorsQueryBuilder(this.qbName, 'treeClosure', entity);
+        qb = addQuery
+            ? await addQuery(this.addOrderByQuery(qb, orderBy))
+            : this.addOrderByQuery(qb, orderBy);
+        if (withTrashed) {
+            qb.withDeleted();
+            if (onlyTrashed) qb.where(`${this.qbName}.deletedAt IS NOT NULL`);
+        }
+        return qb.getCount();
     }
 
     /**

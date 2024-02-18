@@ -1,6 +1,6 @@
-import { ObjectLiteral, SelectQueryBuilder } from 'typeorm';
+import { FindTreeOptions, ObjectLiteral, SelectQueryBuilder } from 'typeorm';
 
-import { OrderType } from './constants';
+import { OrderType, SelectTrashMode } from './constants';
 
 export type QueryHook<Entity> = (
     qb: SelectQueryBuilder<Entity>,
@@ -73,3 +73,28 @@ export interface QueryParams<E extends ObjectLiteral> {
     withTrashed?: boolean;
     onlyTrashed?: boolean;
 }
+
+/**
+ * 服务类数据列表查询类型
+ */
+export type ServiceListQueryOption<E extends ObjectLiteral> =
+    | ServiceListQueryOptionWithTrashed<E>
+    | ServiceListQueryOptionNotWithTrashed<E>;
+
+/**
+ * 带有软删除的服务类数据列表查询类型
+ */
+type ServiceListQueryOptionWithTrashed<E extends ObjectLiteral> = Omit<
+    FindTreeOptions & QueryParams<E>,
+    'withTrashed'
+> & {
+    trashed?: `${SelectTrashMode}`;
+} & Record<string, any>;
+
+/**
+ * 不带软删除的服务类数据列表查询类型
+ */
+type ServiceListQueryOptionNotWithTrashed<E extends ObjectLiteral> = Omit<
+    ServiceListQueryOptionWithTrashed<E>,
+    'trashed'
+>;
