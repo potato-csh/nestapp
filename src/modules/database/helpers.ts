@@ -1,7 +1,7 @@
 import { isNil } from 'lodash';
 import { ObjectLiteral, SelectQueryBuilder } from 'typeorm';
 
-import { PaginateOptions, PaginateReturn } from './types';
+import { OrderQueryType, PaginateOptions, PaginateReturn } from './types';
 
 /**
  * 分页函数
@@ -68,3 +68,27 @@ export function treePaginate<E extends ObjectLiteral>(
         },
     };
 }
+
+/**
+ * 为查询添加排序，默认排序规则为DESC
+ * @param qb
+ * @param alias
+ * @param orderBy
+ */
+export const getOrderByQuery = <E extends ObjectLiteral>(
+    qb: SelectQueryBuilder<E>,
+    alias: string,
+    orderBy?: OrderQueryType,
+) => {
+    if (isNil(orderBy)) return qb;
+    if (typeof orderBy === 'string') return qb.orderBy(`${alias}.${orderBy}`, 'DESC');
+    if (Array.isArray(orderBy)) {
+        for (const item of orderBy) {
+            typeof item === 'string'
+                ? qb.addOrderBy(`${alias}.${item}`, 'DESC')
+                : qb.addOrderBy(`${alias}.${item.name}`, item.order);
+        }
+        return qb;
+    }
+    return qb.orderBy(`${alias}.${(orderBy as any).name}`, (orderBy as any).order);
+};

@@ -1,29 +1,29 @@
-import { pick, unset } from 'lodash';
-import { FindOptionsUtils, FindTreeOptions, TreeRepository } from 'typeorm';
+import { isNil, pick, unset } from 'lodash';
+import { FindOptionsUtils, FindTreeOptions } from 'typeorm';
 
+import { BaseTreeRepository } from '@/modules/database/base/tree.repository';
+import { OrderType, TreeChildrenResolve } from '@/modules/database/constants';
 import { CustomRepository } from '@/modules/database/decorators';
 
 import { CategoryEntity } from '../entities';
 
 @CustomRepository(CategoryEntity)
-export class CategoryRepository extends TreeRepository<CategoryEntity> {
-    buildBaseQB() {
-        return this.createQueryBuilder('category').leftJoinAndSelect('category.parent', 'parent');
-    }
+export class CategoryRepository extends BaseTreeRepository<CategoryEntity> {
+    protected _qbName = 'category';
 
-    /**
-     * 树形结构查询
-     * @param options
-     */
-    async findTrees(
-        options?: FindTreeOptions & {
-            onlyTrashed?: boolean;
-            withTrashed?: boolean;
-        },
-    ) {
-        const roots = await this.findRoots(options);
-        await Promise.all(roots.map((root) => this.findDescendantsTree(root, options)));
-        return roots;
+    protected orderBy = { name: 'customOrder', order: OrderType.ASC };
+
+    protected _childrenResolve = TreeChildrenResolve.UP;
+
+    async flatAncestorsTree(item: CategoryEntity) {
+        let data: Omit<CategoryEntity, 'children'>[] = [];
+        const category = await this.findAncestorsTree(item);
+        const { parent } = category;
+        unset(category, 'children');
+        unset(category, 'parent');
+        data.push(item);
+        if (!isNil(parent)) data = [...(await this.flatAncestorsTree(parent)), ...data];
+        return data as CategoryEntity[];
     }
 
     /**
@@ -129,24 +129,5 @@ export class CategoryRepository extends TreeRepository<CategoryEntity> {
             if (options?.onlyTrashed) qb.where(`category.deletedAt IS NOT NULL`);
         }
         return qb.getCount();
-    }
-
-    /**
-     * 打开并展开树
-     * @param trees
-     * @param depth
-     * @param parent
-     */
-    async toFlatTrees(trees: CategoryEntity[], depth = 0, parent: CategoryEntity | null = null) {
-        const data: Omit<CategoryEntity, 'children'>[] = [];
-        for (const item of trees) {
-            item.depth = depth;
-            item.parent = parent;
-            const { children } = item;
-            unset(item, 'children');
-            data.push(item);
-            data.push(...(await this.toFlatTrees(children, depth + 1, item)));
-        }
-        return data as CategoryEntity[];
     }
 }
