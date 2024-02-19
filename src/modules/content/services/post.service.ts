@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 
-import { Omit, isArray, isFunction, isNil, omit, pick } from 'lodash';
-import { EntityNotFoundError, In, IsNull, Not, SelectQueryBuilder } from 'typeorm';
+import { Omit, isArray, isNil, omit, pick } from 'lodash';
+import { In, IsNull, Not, SelectQueryBuilder } from 'typeorm';
 
+import { BaseService } from '@/modules/database/base/service';
 import { SelectTrashMode } from '@/modules/database/constants';
 import { paginate } from '@/modules/database/helpers';
 import { QueryHook } from '@/modules/database/types';
@@ -23,7 +24,9 @@ type FindParams = {
 };
 
 @Injectable()
-export class PostService {
+export class PostService extends BaseService<PostEntity, PostRepository, FindParams> {
+    protected enableTrash = true;
+
     constructor(
         protected repository: PostRepository,
         protected categoryRepository: CategoryRepository,
@@ -31,7 +34,9 @@ export class PostService {
         protected tagRepository: TagRepository,
         protected searchService: SearchService,
         protected search_type: SearchType = 'against',
-    ) {}
+    ) {
+        super(repository);
+    }
 
     /**
      * 获取分页数据
@@ -43,24 +48,10 @@ export class PostService {
             return this.searchService.search(
                 options.search,
                 pick(options, ['trashed', 'page', 'limit']),
-            );
+            ) as any;
         }
         const qb = await this.buildListQuery(this.repository.buildBaseQB(), options, callback);
         return paginate(qb, options);
-    }
-
-    /**
-     * 查询单篇文章
-     * @param id
-     * @param callback
-     */
-    async detail(id: string, callback?: QueryHook<PostEntity>) {
-        let qb = this.repository.buildBaseQB();
-        qb.where(`post.id = :id`, { id });
-        qb = !isNil(callback) && isFunction(callback) ? await callback(qb) : qb;
-        const item = await qb.getOne();
-        if (!item) throw new EntityNotFoundError(PostEntity, `The post ${id} not exist!`);
-        return item;
     }
 
     /**
@@ -101,7 +92,7 @@ export class PostService {
             this.repository.save(post, { reload: true });
         }
         if (isArray(data.tags)) {
-            // 更新标签
+            // 更新文章关联标签
             await this.repository
                 .createQueryBuilder('post')
                 .relation(PostEntity, 'tags')

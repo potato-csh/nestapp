@@ -1,6 +1,7 @@
 import { isNil } from 'lodash';
-import { ObjectLiteral, SelectQueryBuilder } from 'typeorm';
+import { DataSource, ObjectLiteral, ObjectType, Repository, SelectQueryBuilder } from 'typeorm';
 
+import { CUSTOM_REPOSITORY_METADETA } from './constants';
 import { OrderQueryType, PaginateOptions, PaginateReturn } from './types';
 
 /**
@@ -91,4 +92,20 @@ export const getOrderByQuery = <E extends ObjectLiteral>(
         return qb;
     }
     return qb.orderBy(`${alias}.${(orderBy as any).name}`, (orderBy as any).order);
+};
+
+/**
+ * 获取自定义Repository的实例
+ * @param dataSource
+ * @param Repo
+ */
+export const getCustomRepository = <T extends Repository<E>, E extends ObjectLiteral>(
+    dataSource: DataSource,
+    Repo: ClassType<T>,
+) => {
+    if (isNil(Repo)) return null;
+    const entity = Reflect.getMetadata(CUSTOM_REPOSITORY_METADETA, Repo);
+    if (!entity) return null;
+    const base = dataSource.getRepository<ObjectType<any>>(entity);
+    return new Repo(base.target, base.manager, base.queryRunner) as T;
 };
