@@ -5,7 +5,6 @@ import {
     CreateDateColumn,
     DeleteDateColumn,
     Entity,
-    Index,
     JoinTable,
     ManyToMany,
     ManyToOne,
@@ -30,22 +29,22 @@ export class PostEntity extends BaseEntity {
 
     @Expose()
     @Column({ comment: '文章标题' })
-    @Index({ fulltext: true })
+    // @Index({ fulltext: true })
     title: string;
 
     @Expose({ groups: ['post-detail'] })
     @Column({ comment: '文章内容', type: 'text' })
-    @Index({ fulltext: true })
+    // @Index({ fulltext: true })
     body: string;
 
     @Expose()
     @Column({ comment: '文章描述', nullable: true })
-    @Index({ fulltext: true })
+    // @Index({ fulltext: true })
     summary?: string;
 
     @Expose()
     @Column({ comment: '关键字', type: 'simple-array', nullable: true })
-    @Index({ fulltext: true })
+    // @Index({ fulltext: true })
     keyword?: string[];
 
     @Expose()

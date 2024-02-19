@@ -16,7 +16,7 @@ import { ContentConfig } from './types';
 export class ContentModule {
     static forRoot(configRegister?: () => ContentConfig): DynamicModule {
         const config: Required<ContentConfig> = {
-            searchType: 'against',
+            searchType: 'mysql',
             ...(configRegister ? configRegister() : {}),
         };
         const providers: ModuleMetadata['providers'] = [

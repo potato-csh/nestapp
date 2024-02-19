@@ -105,6 +105,12 @@ export class CreatePostDto {
     @IsOptional({ always: true })
     summary?: string;
 
+    @Transform(({ value }) => toBoolean(value))
+    @IsBoolean({ always: true })
+    @ValidateIf((value) => !isNil(value.publish))
+    @IsOptional({ always: true })
+    publish?: boolean;
+
     @MaxLength(20, {
         each: true,
         always: true,

@@ -33,7 +33,7 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
         protected categoryService: CategoryService,
         protected tagRepository: TagRepository,
         protected searchService: SearchService,
-        protected search_type: SearchType = 'against',
+        protected search_type: SearchType = 'mysql',
     ) {
         super(repository);
     }
@@ -47,7 +47,7 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
         if (!isNil(this.searchService) && !isNil(options.search) && this.search_type === 'meili') {
             return this.searchService.search(
                 options.search,
-                pick(options, ['trashed', 'page', 'limit']),
+                pick(options, ['isPublished', 'trashed', 'page', 'limit']),
             ) as any;
         }
         const qb = await this.buildListQuery(this.repository.buildBaseQB(), options, callback);
@@ -59,8 +59,12 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
      * @param data
      */
     async create(data: CreatePostDto) {
+        let publishedAt: Date | null;
+        if (!isNil(data.publish)) {
+            publishedAt = data.publish ? new Date() : null;
+        }
         const createPostDto = {
-            ...data,
+            ...omit(data, ['publish']),
             // 文章所属的分类
             category: !isNil(data.category)
                 ? await this.categoryRepository.findOneOrFail({ where: { id: data.category } })
@@ -71,6 +75,7 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
                       id: In(data.tags),
                   })
                 : [],
+            publishedAt,
         };
         const item = await this.repository.save(createPostDto);
         if (!isNil(this.searchService)) await this.searchService.create(item);
@@ -82,6 +87,10 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
      * @param data
      */
     async update(data: UpdatePostDto) {
+        let publishedAt: Date | null;
+        if (!isNil(data.publish)) {
+            publishedAt = data.publish ? new Date() : null;
+        }
         const post = await this.detail(data.id);
         if (data.category !== undefined) {
             // 更新分类
@@ -99,7 +108,11 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
                 .of(post)
                 .addAndRemove(data.tags, post.tags ?? []);
         }
-        await this.repository.update(data.id, omit(data, ['id', 'tags', 'category']));
+        await this.repository.update(data.id, {
+            ...omit(data, ['id', 'tags', 'category', 'publish']),
+            publishedAt,
+        });
+        console.log('test:     ', this.searchService);
         if (!isNil(this.searchService)) await this.searchService.update([post]);
         return this.detail(data.id);
     }
@@ -168,7 +181,7 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
         options: FindParams,
         callback?: QueryHook<PostEntity>,
     ) {
-        const { category, tag, orderBy, isPublished, trashed } = options;
+        const { category, tag, orderBy, search, isPublished, trashed } = options;
         // 是否查询回收站
         if (trashed === SelectTrashMode.ALL || trashed === SelectTrashMode.ONLY) {
             qb.withDeleted();
@@ -180,7 +193,7 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
                 : qb.where({ publishedAt: IsNull() });
         }
         this.queryOrderBy(qb, orderBy);
-        if (!isNil(options.search)) this.buildSearchQuery(qb, options.search);
+        if (!isNil(search)) this.buildSearchQuery(qb, search);
         if (category) await this.queryByCategory(category, qb);
         // 查询某个标签关联的文章
         if (tag) qb.where('tags.id = :id', { id: tag });
@@ -188,32 +201,19 @@ export class PostService extends BaseService<PostEntity, PostRepository, FindPar
         return qb;
     }
 
+    /**
+     * 构建mysql全文搜索的sql
+     * @param qb
+     * @param search
+     */
     protected async buildSearchQuery(qb: SelectQueryBuilder<PostEntity>, search: string) {
-        if (this.search_type === 'like') {
-            qb.andWhere('title LIKE  :search', { search: `${search}` })
-                .orWhere('body LIKE :search', { search: `${search}` })
-                .orWhere('summary LIKE :search', { search: `${search}` })
-                .orWhere('keyword LIKE :search', { search: `${search}` })
-                .orWhere('category.name LIKE :search', { search: `${search}` })
-                .orWhere('tags.name LIKE :search', { search: `${search}` });
-        } else if (this.search_type === 'against') {
-            qb.andWhere('MATCH(title) AGAINST (:search IN BOOLEAN MODE)', {
-                search: `${search}`,
-            })
-                .orWhere('MATCH(body) AGAINST (:search IN BOOLEAN MODE)', { search: `${search}` })
-                .orWhere('MATCH(summary) AGAINST (:search IN BOOLEAN MODE)', {
-                    search: `${search}`,
-                })
-                .orWhere('MATCH(keyword) AGAINST (:search IN BOOLEAN MODE)', {
-                    search: `${search}`,
-                })
-                .orWhere('MATCH(category.name) AGAINST (:search IN BOOLEAN MODE)', {
-                    search: `${search}`,
-                })
-                .orWhere('MATCH(tags.name) AGAINST (:search IN BOOLEAN MODE)', {
-                    search: `${search}`,
-                });
-        }
+        qb.andWhere('title LIKE  :search', { search: `${search}` })
+            .orWhere('body LIKE :search', { search: `${search}` })
+            .orWhere('summary LIKE :search', { search: `${search}` })
+            .orWhere('keyword LIKE :search', { search: `${search}` })
+            .orWhere('category.name LIKE :search', { search: `${search}` })
+            .orWhere('tags.name LIKE :search', { search: `${search}` });
+        return qb;
     }
 
     /**
