@@ -4,38 +4,28 @@ import {
     Delete,
     Get,
     Param,
-    ParseIntPipe,
     ParseUUIDPipe,
     Patch,
     Post,
     Query,
     SerializeOptions,
-    UseInterceptors,
-    ValidationPipe,
 } from '@nestjs/common';
 
-import { AppIntercepter } from '@/modules/core/providers';
+import { DeleteWithTrashDto } from '@/modules/restful/dtos/delete-with-trash.dto';
+
+import { RestoreDto } from '@/modules/restful/dtos/restore.dto';
 
 import { CreatePostDto, QueryPostDto, UpdatePostDto } from '../dtos';
 import { PostService } from '../services/post.service';
 
-@UseInterceptors(AppIntercepter)
 @Controller('posts')
 export class PostController {
-    constructor(private postService: PostService) {}
+    constructor(protected postService: PostService) {}
 
     @Get()
     @SerializeOptions({ groups: ['post-list'] })
     async list(
-        @Query(
-            new ValidationPipe({
-                transform: true,
-                whitelist: true,
-                forbidNonWhitelisted: true,
-                forbidUnknownValues: true,
-                validationError: { target: false },
-            }),
-        )
+        @Query()
         options: QueryPostDto,
     ) {
         return this.postService.paginate(options);
@@ -53,16 +43,7 @@ export class PostController {
     @Post()
     @SerializeOptions({ groups: ['post-detail'] })
     async store(
-        @Body(
-            new ValidationPipe({
-                transform: true,
-                whitelist: true,
-                forbidNonWhitelisted: true,
-                forbidUnknownValues: true,
-                validationError: { target: false },
-                groups: ['create'],
-            }),
-        )
+        @Body()
         data: CreatePostDto,
     ) {
         return this.postService.create(data);
@@ -71,27 +52,29 @@ export class PostController {
     @Patch()
     @SerializeOptions({ groups: ['post-detail'] })
     async update(
-        @Body(
-            new ValidationPipe({
-                transform: true,
-                whitelist: true,
-                forbidNonWhitelisted: true,
-                forbidUnknownValues: true,
-                validationError: { target: false },
-                groups: ['update'],
-            }),
-        )
+        @Body()
         data: UpdatePostDto,
     ) {
         return this.postService.update(data);
     }
 
-    @Delete(':id')
-    @SerializeOptions({ groups: ['post-detail'] })
+    @Delete()
+    @SerializeOptions({ groups: ['post-list'] })
     async delete(
-        @Param('id', new ParseIntPipe())
-        id: string,
+        @Body()
+        data: DeleteWithTrashDto,
     ) {
-        return this.postService.delete(id);
+        const { ids, trash } = data;
+        return this.postService.delete(ids, trash);
+    }
+
+    @Patch('restore')
+    @SerializeOptions({ groups: ['post-list'] })
+    async restore(
+        @Body()
+        data: RestoreDto,
+    ) {
+        const { ids } = data;
+        return this.postService.restore(ids);
     }
 }

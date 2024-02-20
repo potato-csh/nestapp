@@ -6,11 +6,11 @@ import {
     Entity,
     ManyToOne,
     PrimaryColumn,
-    Relation,
     Tree,
     TreeChildren,
     TreeParent,
 } from 'typeorm';
+import type { Relation } from 'typeorm';
 
 import { PostEntity } from './post.entity';
 
@@ -23,7 +23,8 @@ export class CommentEntity extends BaseEntity {
     id: string;
 
     @Expose()
-    @Column({ comment: '评论标题', type: 'text' })
+    @Column({ comment: '评论内容', type: 'text' })
+    // @Index({ fulltext: true })
     body: string;
 
     @Expose()
@@ -32,7 +33,8 @@ export class CommentEntity extends BaseEntity {
 
     @ManyToOne(() => PostEntity, (post) => post.comments, {
         // 文章不能为空
-        nullable: true,
+        nullable: false,
+        // 跟随父表删除与更新
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE',
     })

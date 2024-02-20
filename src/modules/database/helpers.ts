@@ -1,7 +1,8 @@
 import { isNil } from 'lodash';
-import { ObjectLiteral, SelectQueryBuilder } from 'typeorm';
+import { DataSource, ObjectLiteral, ObjectType, Repository, SelectQueryBuilder } from 'typeorm';
 
-import { PaginateOptions, PaginateReturn } from './types';
+import { CUSTOM_REPOSITORY_METADETA } from './constants';
+import { OrderQueryType, PaginateOptions, PaginateReturn } from './types';
 
 /**
  * 分页函数
@@ -34,4 +35,77 @@ export const paginate = async <E extends ObjectLiteral>(
             currentPage: page,
         },
     };
+};
+
+/**
+ * 树形分页函数
+ * @param options
+ * @param data
+ */
+export function treePaginate<E extends ObjectLiteral>(
+    options: PaginateOptions,
+    data: E[],
+): PaginateReturn<E> {
+    const { page, limit } = options;
+    let items: E[] = [];
+    const totalItems = data.length;
+    const totalRst = totalItems / limit;
+    const totalPages =
+        totalRst > Math.floor(totalRst) ? Math.floor(totalRst) + 1 : Math.floor(totalRst);
+    let itemCount = 0;
+    if (page <= totalPages) {
+        itemCount = page === totalPages ? totalItems - (totalPages - 1) * limit : limit;
+        const start = (page - 1) * limit;
+        items = data.slice(start, start + itemCount);
+    }
+    return {
+        items,
+        meta: {
+            itemCount,
+            totalItems,
+            perPage: limit,
+            totalPages,
+            currentPage: page,
+        },
+    };
+}
+
+/**
+ * 为查询添加排序，默认排序规则为DESC
+ * @param qb
+ * @param alias
+ * @param orderBy
+ */
+export const getOrderByQuery = <E extends ObjectLiteral>(
+    qb: SelectQueryBuilder<E>,
+    alias: string,
+    orderBy?: OrderQueryType,
+) => {
+    if (isNil(orderBy)) return qb;
+    if (typeof orderBy === 'string') return qb.orderBy(`${alias}.${orderBy}`, 'DESC');
+    if (Array.isArray(orderBy)) {
+        for (const item of orderBy) {
+            typeof item === 'string'
+                ? qb.addOrderBy(`${alias}.${item}`, 'DESC')
+                : qb.addOrderBy(`${alias}.${item.name}`, item.order);
+        }
+        return qb;
+    }
+    return qb.orderBy(`${alias}.${(orderBy as any).name}`, (orderBy as any).order);
+};
+
+/**
+ * 获取自定义Repository的实例
+ * @param dataSource
+ * @param Repo
+ */
+export const getCustomRepository = <T extends Repository<E>, E extends ObjectLiteral>(
+    dataSource: DataSource,
+    Repo: ClassType<T>,
+) => {
+    if (isNil(Repo)) return null;
+    const entity = Reflect.getMetadata(CUSTOM_REPOSITORY_METADETA, Repo);
+    if (!entity) return null;
+    const base = dataSource.getRepository<ObjectType<any>>(entity);
+    return new Repo(base.target, base.manager, base.queryRunner) as T;
 };

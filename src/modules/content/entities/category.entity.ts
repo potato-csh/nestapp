@@ -1,14 +1,16 @@
 import { Exclude, Expose, Type } from 'class-transformer';
 import {
     BaseEntity,
+    Column,
+    DeleteDateColumn,
     Entity,
     OneToMany,
     PrimaryColumn,
-    Relation,
     Tree,
     TreeChildren,
     TreeParent,
 } from 'typeorm';
+import type { Relation } from 'typeorm';
 
 import { PostEntity } from './post.entity';
 
@@ -21,11 +23,12 @@ export class CategoryEntity extends BaseEntity {
     id: string;
 
     @Expose()
-    @PrimaryColumn({ comment: '分类名称' })
+    @Column({ comment: '分类名称' })
+    // @Index({ fulltext: true })
     name: string;
 
     @Expose({ groups: ['category-tree', 'category-list', 'category-detail'] })
-    @PrimaryColumn({ comment: '分类排序', default: 0 })
+    @Column({ comment: '分类排序', default: 0 })
     customOrder: number;
 
     @OneToMany(() => PostEntity, (post) => post.category, {
@@ -44,5 +47,12 @@ export class CategoryEntity extends BaseEntity {
     @Expose({ groups: ['category-tree'] })
     @TreeChildren({ cascade: true })
     @Type(() => CategoryEntity)
-    childern: Relation<CategoryEntity>[];
+    children: Relation<CategoryEntity>[];
+
+    @Expose()
+    @Type(() => Date)
+    @DeleteDateColumn({
+        comment: '删除时间',
+    })
+    deletedAt: Date;
 }

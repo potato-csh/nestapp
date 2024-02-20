@@ -16,14 +16,19 @@ import {
 
 import { isNil, toNumber } from 'lodash';
 
+import { IsDataExist } from '@/modules/core/constraints';
+import { DtoValidation } from '@/modules/core/decorators';
 import { toBoolean } from '@/modules/core/helpers';
+import { SelectTrashMode } from '@/modules/database/constants';
 import { PaginateOptions } from '@/modules/database/types';
 
 import { PostOrderType } from '../constants';
+import { CategoryEntity, TagEntity } from '../entities';
 
 /**
  * 文章分页查询验证
  */
+@DtoValidation({ type: 'query' })
 export class QueryPostDto implements PaginateOptions {
     @Transform(({ value }) => toBoolean(value))
     @IsBoolean()
@@ -47,15 +52,43 @@ export class QueryPostDto implements PaginateOptions {
     @IsNumber()
     @IsOptional()
     limit = 10;
+
+    @IsDataExist(CategoryEntity, {
+        always: true,
+        message: '分类不存在',
+    })
+    @IsUUID(undefined, { message: 'ID格式错误' })
+    @IsOptional()
+    category?: string;
+
+    @IsDataExist(TagEntity, {
+        always: true,
+        message: '标签不存在',
+    })
+    @IsUUID(undefined, { message: 'ID格式错误' })
+    @IsOptional()
+    tag?: string;
+
+    @IsEnum(SelectTrashMode)
+    @IsOptional()
+    trashed?: SelectTrashMode;
+
+    @MaxLength(100, {
+        always: true,
+        message: '搜索字符串长度不得超过$constraint1',
+    })
+    @IsOptional({ always: true })
+    search?: string;
 }
 
 /**
  * 文章创建验证
  */
+@DtoValidation({ groups: ['create'] })
 export class CreatePostDto {
     @MaxLength(255, {
         always: true,
-        message: '文章标题长度必须大于$constraint1',
+        message: '文章标题长度不得大于$constraint1',
     })
     @IsNotEmpty({ groups: ['create'], message: '文章标题必须填写' })
     @IsOptional({ groups: ['update'] })
@@ -67,15 +100,21 @@ export class CreatePostDto {
 
     @MaxLength(500, {
         always: true,
-        message: '文章描述长度必须大于$constraint1',
+        message: '文章描述长度不得大于$constraint1',
     })
     @IsOptional({ always: true })
     summary?: string;
 
+    @Transform(({ value }) => toBoolean(value))
+    @IsBoolean({ always: true })
+    @ValidateIf((value) => !isNil(value.publish))
+    @IsOptional({ always: true })
+    publish?: boolean;
+
     @MaxLength(20, {
         each: true,
         always: true,
-        message: '每个关键字长度必须大于$constraint1',
+        message: '每个关键字长度不得大于$constraint1',
     })
     @IsOptional({ always: true })
     keyword?: string[];
@@ -91,8 +130,37 @@ export class CreatePostDto {
     @IsNumber(undefined, { always: true })
     @IsOptional({ always: true })
     customOrder = 0;
+
+    @IsDataExist(CategoryEntity, {
+        always: true,
+        message: '分类不存在',
+    })
+    @IsUUID(undefined, {
+        each: true,
+        always: true,
+        message: 'ID格式错误',
+    })
+    @IsOptional({ groups: ['update'] })
+    category: string;
+
+    @IsDataExist(TagEntity, {
+        always: true,
+        each: true,
+        message: '标签不存在',
+    })
+    @IsUUID(undefined, {
+        each: true,
+        always: true,
+        message: 'ID格式错误',
+    })
+    @IsOptional({ always: true })
+    tags?: string[];
 }
 
+/**
+ * 文章更新验证
+ */
+@DtoValidation({ groups: ['update'] })
 export class UpdatePostDto extends PartialType(CreatePostDto) {
     @IsUUID(undefined, { groups: ['update'], message: '文章ID格式错误' })
     @IsDefined({ groups: ['update'], message: '文章ID必须指定' })
