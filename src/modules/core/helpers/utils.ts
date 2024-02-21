@@ -42,3 +42,12 @@ export const deepMerge = <T1, T2>(
     }
     return deepmerge(x, y, options) as T2 extends T1 ? T1 : T1 & T2;
 };
+
+/**
+ * 判断一个函数是否为异步函数
+ * @param callback
+ */
+export function isAsyncFn<R, A extends Array<any>>(callback: (...args: A) => Promise<R> | R) {
+    const AsyncFunction = (async () => {}).constructor;
+    return callback instanceof AsyncFunction === true;
+}
