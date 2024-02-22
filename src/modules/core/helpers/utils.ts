@@ -1,3 +1,4 @@
+import { Module, ModuleMetadata, Type } from '@nestjs/common';
 import deepmerge from 'deepmerge';
 import { isNil } from 'lodash';
 
@@ -50,4 +51,24 @@ export const deepMerge = <T1, T2>(
 export function isAsyncFn<R, A extends Array<any>>(callback: (...args: A) => Promise<R> | R) {
     const AsyncFunction = (async () => {}).constructor;
     return callback instanceof AsyncFunction === true;
+}
+
+/**
+ * 手动动态创建一个模块
+ * @param target
+ * @param metaSetter
+ */
+export function CreateModule(
+    target: string | Type<any>,
+    metaSetter: () => ModuleMetadata = () => ({}),
+): Type<any> {
+    let ModuleClass: Type<any>;
+    if (typeof target === 'string') {
+        ModuleClass = class {};
+        Object.defineProperty(ModuleClass, 'name', { value: target });
+    } else {
+        ModuleClass = target;
+    }
+    Module(metaSetter())(ModuleClass);
+    return ModuleClass;
 }
