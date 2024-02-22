@@ -72,3 +72,17 @@ export function CreateModule(
     Module(metaSetter())(ModuleClass);
     return ModuleClass;
 }
+
+/**
+ * 生成只包含字母的固定长度的字符串
+ * @param length
+ */
+export const getRandomCharString = (length: number) => {
+    let result = '';
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+    const charactersLength = characters.length;
+    for (let i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+    return result;
+};

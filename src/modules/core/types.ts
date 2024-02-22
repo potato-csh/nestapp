@@ -68,3 +68,41 @@ export interface CreateOptions {
 export interface ContainerBuilder {
     (params: { configure: Configure; BootModule: Type<any> }): Promise<NestFastifyApplication>;
 }
+
+/**
+ * 应用配置
+ */
+export interface AppConfig {
+    /**
+     * App名称
+     */
+    name: string;
+    /**
+     * 主机地址，默认为127.0.0.1
+     */
+    host: string;
+    /**
+     * 监听端口，默认为3100
+     */
+    port: number;
+    /**
+     * 是否开启https,默认false
+     */
+    https: boolean;
+    /**
+     * 语言，默认zh_Cn
+     */
+    locale: string;
+    /**
+     * 备用语言
+     */
+    fallbackLocale: string;
+    /**
+     * 控制台打印的url，默认自动生成
+     */
+    url?: string;
+    /**
+     * 由url+api 前缀生成的基础api url
+     */
+    prefix?: string;
+}

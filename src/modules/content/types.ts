@@ -5,5 +5,6 @@
 export type SearchType = 'mysql' | 'meili';
 
 export interface ContentConfig {
-    searchType?: SearchType;
+    searchType: SearchType;
+    htmlEnabled: boolean;
 }
