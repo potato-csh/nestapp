@@ -106,3 +106,21 @@ export interface AppConfig {
      */
     prefix?: string;
 }
+
+/**
+ * 控制台错误函数panic的选项参数
+ */
+export interface PanicOption {
+    /**
+     * 报错信息
+     */
+    message: string;
+    /**
+     * 抛出的异常信息
+     */
+    error?: any;
+    /**
+     * 是否退出进程
+     */
+    exit?: boolean;
+}

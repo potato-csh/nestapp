@@ -1,23 +1,44 @@
-import { DynamicModule, Module, Provider, Type } from '@nestjs/common';
+import { DynamicModule, Module, ModuleMetadata, Provider, Type } from '@nestjs/common';
 import { TypeOrmModule, TypeOrmModuleOptions, getDataSourceToken } from '@nestjs/typeorm';
 
 import { DataSource, ObjectType } from 'typeorm';
 
+import { Configure } from '../config/configure';
 import { DataExistConstraint } from '../core/constraints';
 
 import { UniqueTreeExistConstraint } from '../core/constraints/tree.exist.contraint';
 import { UniqueTreeConstraint } from '../core/constraints/tree.unique.constraint';
 
+import { UniqueConstraint } from '../core/constraints/unique.constraint';
+import { UniqueExistConstraint } from '../core/constraints/unique.exist.constraint';
+import { panic } from '../core/helpers/command';
+
 import { CUSTOM_REPOSITORY_METADETA } from './constants';
+import { DbOptions } from './types';
 
 @Module({})
 export class DatabaseModule {
-    static forRoot(configRegister: () => TypeOrmModuleOptions): DynamicModule {
+    static async forRoot(configure: Configure) {
+        if (!configure.has('database')) {
+            panic({ message: 'Database config not exists or not right!' });
+        }
+        const { connections } = await configure.get<DbOptions>('database');
+        const imports: ModuleMetadata['imports'] = [];
+        for (const dbOption of connections) {
+            imports.push(TypeOrmModule.forRoot(dbOption as TypeOrmModuleOptions));
+        }
+        const providers: ModuleMetadata['providers'] = [
+            DataExistConstraint,
+            UniqueConstraint,
+            UniqueExistConstraint,
+            UniqueTreeConstraint,
+            UniqueTreeExistConstraint,
+        ];
         return {
             module: DatabaseModule,
             global: true,
-            imports: [TypeOrmModule.forRoot(configRegister())],
-            providers: [DataExistConstraint, UniqueTreeConstraint, UniqueTreeExistConstraint],
+            imports,
+            providers,
         };
     }
 
