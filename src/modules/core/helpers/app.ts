@@ -35,10 +35,10 @@ export const createApp = (option: CreateOptions) => async (): Promise<App> => {
         configure: app.configure,
         BootModule,
     });
-    // 设置api前缀
-    if (app.configure.has('app.prefix')) {
-        app.container.setGlobalPrefix(await app.configure.get<string>('app.prefix'));
-    }
+    // // 设置api前缀
+    // if (app.configure.has('app.prefix')) {
+    //     app.container.setGlobalPrefix(await app.configure.get<string>('app.prefix'));
+    // }
     // 为class-validator添加容器以便在自定义约束中可以注入dataSource等依赖
     useContainer(app.container.select(BootModule), {
         fallbackOnErrors: true,
