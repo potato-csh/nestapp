@@ -11,13 +11,19 @@ import {
     SerializeOptions,
 } from '@nestjs/common';
 
+import { ApiTags } from '@nestjs/swagger';
+
+import { Depends } from '@/modules/restful/decorators/depends.decorator';
 import { DeleteWithTrashDto } from '@/modules/restful/dtos/delete-with-trash.dto';
 
 import { RestoreDto } from '@/modules/restful/dtos/restore.dto';
 
+import { ContentModule } from '../content.module';
 import { CreatePostDto, QueryPostDto, UpdatePostDto } from '../dtos';
 import { PostService } from '../services/post.service';
 
+@ApiTags('文章操作')
+@Depends(ContentModule)
 @Controller('posts')
 export class PostController {
     constructor(protected postService: PostService) {}

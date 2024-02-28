@@ -11,13 +11,20 @@ import {
     Delete,
 } from '@nestjs/common';
 
+import { ApiTags } from '@nestjs/swagger';
+
+import { Depends } from '@/modules/restful/decorators/depends.decorator';
 import { DeleteWithTrashDto } from '@/modules/restful/dtos/delete-with-trash.dto';
 
+import { PaginateDto } from '@/modules/restful/dtos/paginate.dto';
 import { RestoreDto } from '@/modules/restful/dtos/restore.dto';
 
-import { QueryCategoryDto, CreateTagDto, UpdateTagDto } from '../dtos';
+import { ContentModule } from '../content.module';
+import { CreateTagDto, UpdateTagDto } from '../dtos';
 import { TagService } from '../services';
 
+@ApiTags('标签操作')
+@Depends(ContentModule)
 @Controller('tags')
 export class TagController {
     constructor(protected service: TagService) {}
@@ -26,7 +33,7 @@ export class TagController {
     @SerializeOptions({})
     async list(
         @Query()
-        options: QueryCategoryDto,
+        options: PaginateDto,
     ) {
         return this.service.paginate(options);
     }

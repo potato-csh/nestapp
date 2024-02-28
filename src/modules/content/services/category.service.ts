@@ -5,7 +5,7 @@ import { EntityNotFoundError } from 'typeorm';
 
 import { BaseService } from '@/modules/database/base/service';
 
-import { CreateCategoryDto, QueryCategoryTreeDto, UpdateCategoryDto } from '../dtos';
+import { CreateCategoryDto, UpdateCategoryDto } from '../dtos';
 import { CategoryEntity } from '../entities';
 import { CategoryRepository } from '../repositories';
 
@@ -18,7 +18,7 @@ export class CategoryService extends BaseService<CategoryEntity, CategoryReposit
     /**
      * 查询分类树
      */
-    async findTrees(options: QueryCategoryTreeDto) {
+    async findTrees() {
         return this.repository.findTrees();
     }
 

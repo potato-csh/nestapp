@@ -1,6 +1,7 @@
 // import { NestFactory } from '@nestjs/core';
 
-import { createApp, listened, startApp } from './modules/core/helpers/app';
+import { createApp, startApp } from './modules/core/helpers/app';
+import { listened } from './modules/restful/helpers';
 import { createOptions } from './options';
 
 // import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';

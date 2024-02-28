@@ -1,10 +1,16 @@
 import { Controller, Get, SerializeOptions, Query, Post, Body, Delete } from '@nestjs/common';
 
+import { ApiTags } from '@nestjs/swagger';
+
+import { Depends } from '@/modules/restful/decorators/depends.decorator';
 import { DeleteDto } from '@/modules/restful/dtos/delete.dto';
 
+import { ContentModule } from '../content.module';
 import { QueryCommentTreeDto, QueryCommentDto, CreateCommentDto } from '../dtos';
 import { CommentService } from '../services';
 
+@ApiTags('评论操作')
+@Depends(ContentModule)
 @Controller('comments')
 export class CommentController {
     constructor(protected service: CommentService) {}

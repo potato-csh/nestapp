@@ -2,7 +2,6 @@ import { PartialType } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import {
     IsBoolean,
-    IsDateString,
     IsDefined,
     IsEnum,
     IsNotEmpty,
@@ -30,11 +29,17 @@ import { CategoryEntity, TagEntity } from '../entities';
  */
 @DtoValidation({ type: 'query' })
 export class QueryPostDto implements PaginateOptions {
+    /**
+     * 是否查询已发布(全部文章:不填、只查询已发布的:true、只查询未发布的:false)
+     */
     @Transform(({ value }) => toBoolean(value))
     @IsBoolean()
     @IsOptional()
     isPublished?: boolean;
 
+    /**
+     * 查询结果排序,不填则综合排序
+     */
     @IsEnum(PostOrderType, {
         message: `排序必须是${Object.values(PostOrderType).join(',')}其中一项`,
     })
@@ -53,6 +58,9 @@ export class QueryPostDto implements PaginateOptions {
     @IsOptional()
     limit = 10;
 
+    /**
+     * 根据分类ID查询此分类及其后代分类下的文章
+     */
     @IsDataExist(CategoryEntity, {
         always: true,
         message: '分类不存在',
@@ -61,6 +69,9 @@ export class QueryPostDto implements PaginateOptions {
     @IsOptional()
     category?: string;
 
+    /**
+     * 根据标签ID查询
+     */
     @IsDataExist(TagEntity, {
         always: true,
         message: '标签不存在',
@@ -73,6 +84,9 @@ export class QueryPostDto implements PaginateOptions {
     @IsOptional()
     trashed?: SelectTrashMode;
 
+    /**
+     * 全文搜索
+     */
     @MaxLength(100, {
         always: true,
         message: '搜索字符串长度不得超过$constraint1',
@@ -86,6 +100,9 @@ export class QueryPostDto implements PaginateOptions {
  */
 @DtoValidation({ groups: ['create'] })
 export class CreatePostDto {
+    /**
+     * 文章标题
+     */
     @MaxLength(255, {
         always: true,
         message: '文章标题长度不得大于$constraint1',
@@ -94,10 +111,16 @@ export class CreatePostDto {
     @IsOptional({ groups: ['update'] })
     title: string;
 
+    /**
+     * 文章内容
+     */
     @IsNotEmpty({ groups: ['create'], message: '文章内容必须填写' })
     @IsOptional({ groups: ['update'] })
     body: string;
 
+    /**
+     * 文章描述
+     */
     @MaxLength(500, {
         always: true,
         message: '文章描述长度不得大于$constraint1',
@@ -105,12 +128,18 @@ export class CreatePostDto {
     @IsOptional({ always: true })
     summary?: string;
 
+    /**
+     * 是否发布
+     */
     @Transform(({ value }) => toBoolean(value))
     @IsBoolean({ always: true })
     @ValidateIf((value) => !isNil(value.publish))
     @IsOptional({ always: true })
     publish?: boolean;
 
+    /**
+     * SEO关键字
+     */
     @MaxLength(20, {
         each: true,
         always: true,
@@ -119,18 +148,18 @@ export class CreatePostDto {
     @IsOptional({ always: true })
     keyword?: string[];
 
-    @IsDateString({ strict: true }, { always: true })
-    @IsOptional({ always: true })
-    @ValidateIf(({ value }) => !isNil(value.publishedAt))
-    @Transform(({ value }) => (value === 'null' ? null : value))
-    publishedAt?: Date;
-
+    /**
+     * 自定义排序
+     */
     @Transform(({ value }) => toNumber(value))
     @Min(0, { always: true, message: '排序值必须大于0' })
     @IsNumber(undefined, { always: true })
     @IsOptional({ always: true })
     customOrder = 0;
 
+    /**
+     * 所属分类ID
+     */
     @IsDataExist(CategoryEntity, {
         always: true,
         message: '分类不存在',
@@ -143,6 +172,9 @@ export class CreatePostDto {
     @IsOptional({ groups: ['update'] })
     category: string;
 
+    /**
+     * 关联标签ID
+     */
     @IsDataExist(TagEntity, {
         always: true,
         each: true,
@@ -162,6 +194,9 @@ export class CreatePostDto {
  */
 @DtoValidation({ groups: ['update'] })
 export class UpdatePostDto extends PartialType(CreatePostDto) {
+    /**
+     * 待更新ID
+     */
     @IsUUID(undefined, { groups: ['update'], message: '文章ID格式错误' })
     @IsDefined({ groups: ['update'], message: '文章ID必须指定' })
     id: string;

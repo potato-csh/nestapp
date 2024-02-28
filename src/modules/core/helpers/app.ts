@@ -1,11 +1,9 @@
 import { BadGatewayException, Global, Module, ModuleMetadata, Type } from '@nestjs/common';
 
 import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
-import { NestFastifyApplication } from '@nestjs/platform-fastify';
-import chalk from 'chalk';
 import { useContainer } from 'class-validator';
 
-import { isNil, omit } from 'lodash';
+import { omit } from 'lodash';
 
 import { ConfigModule } from '@/modules/config/config.module';
 import { Configure } from '@/modules/config/configure';
@@ -126,31 +124,3 @@ export async function startApp(
     const { port, host } = await configure.get<AppConfig>('app');
     await container.listen(port, host, listened(app, startTime));
 }
-
-/**
- * 输出API地址
- * @param configure
- * @param container
- */
-export async function echoApi(configure: Configure, container: NestFastifyApplication) {
-    const appUrl = await configure.get<string>('app.url');
-    // 设置应用的API前缀，如果没有则和appUrl相同
-    const urlPrefix = await configure.get('app.prefix', undefined);
-    const apiUrl = !isNil(urlPrefix)
-        ? `${appUrl}${urlPrefix.length > 0 ? `/${urlPrefix}` : urlPrefix}`
-        : appUrl;
-    console.log(`-RestAPI: ${chalk.green.underline(apiUrl)}`);
-}
-
-/**
- * 启动信息打印
- * @param app
- * @param startTime
- */
-export const listened: (app: App, startTime: Date) => () => Promise<void> =
-    ({ configure, container }, startTime) =>
-    async () => {
-        console.log();
-        await echoApi(configure, container);
-        console.log('used time:', chalk.cyan(`${new Date().getTime() - startTime.getTime()}`));
-    };

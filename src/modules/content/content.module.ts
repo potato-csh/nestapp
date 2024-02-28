@@ -6,7 +6,6 @@ import { Configure } from '../config/configure';
 import { DatabaseModule } from '../database/database.module';
 
 import { defaultContentConfig } from './config';
-import * as controllers from './controllers';
 import * as entities from './entities';
 import * as repositories from './repositories';
 import * as services from './services';
@@ -69,7 +68,7 @@ export class ContentModule {
                 TypeOrmModule.forFeature(Object.values(entities)),
                 DatabaseModule.forRepository(Object.values(repositories)),
             ],
-            controllers: Object.values(controllers),
+            // controllers: Object.values(controllers),
             providers,
             exports,
         };
