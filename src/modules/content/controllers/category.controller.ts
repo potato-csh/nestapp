@@ -17,7 +17,6 @@ import { Depends } from '@/modules/restful/decorators/depends.decorator';
 import { DeleteWithTrashDto } from '@/modules/restful/dtos/delete-with-trash.dto';
 
 import { PaginateDto } from '@/modules/restful/dtos/paginate.dto';
-import { RestoreDto } from '@/modules/restful/dtos/restore.dto';
 
 import { ContentModule } from '../content.module';
 import { CreateCategoryDto, UpdateCategoryDto } from '../dtos';
@@ -103,14 +102,5 @@ export class CategoryController {
     ) {
         const { ids, trash } = data;
         return this.service.delete(ids, trash);
-    }
-
-    @Patch('restore')
-    async restore(
-        @Body()
-        data: RestoreDto,
-    ) {
-        const { ids } = data;
-        return this.service.restore(ids);
     }
 }

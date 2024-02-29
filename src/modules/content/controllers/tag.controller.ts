@@ -17,7 +17,6 @@ import { Depends } from '@/modules/restful/decorators/depends.decorator';
 import { DeleteWithTrashDto } from '@/modules/restful/dtos/delete-with-trash.dto';
 
 import { PaginateDto } from '@/modules/restful/dtos/paginate.dto';
-import { RestoreDto } from '@/modules/restful/dtos/restore.dto';
 
 import { ContentModule } from '../content.module';
 import { CreateTagDto, UpdateTagDto } from '../dtos';
@@ -29,6 +28,10 @@ import { TagService } from '../services';
 export class TagController {
     constructor(protected service: TagService) {}
 
+    /**
+     * 查询标签列表
+     * @param options
+     */
     @Get()
     @SerializeOptions({})
     async list(
@@ -38,6 +41,10 @@ export class TagController {
         return this.service.paginate(options);
     }
 
+    /**
+     * 查询标签详情
+     * @param id
+     */
     @Get(':id')
     @SerializeOptions({})
     async detail(
@@ -47,6 +54,10 @@ export class TagController {
         return this.service.detail(id);
     }
 
+    /**
+     * 新增标签
+     * @param data
+     */
     @Post()
     @SerializeOptions({})
     async store(
@@ -56,6 +67,10 @@ export class TagController {
         return this.service.create(data);
     }
 
+    /**
+     * 更新标签
+     * @param data
+     */
     @Patch()
     @SerializeOptions({})
     async update(
@@ -65,6 +80,10 @@ export class TagController {
         return this.service.update(data);
     }
 
+    /**
+     * 删除标签
+     * @param data
+     */
     @Delete()
     @SerializeOptions({})
     async delete(
@@ -73,15 +92,5 @@ export class TagController {
     ) {
         const { ids, trash } = data;
         return this.service.delete(ids, trash);
-    }
-
-    @Patch('restore')
-    @SerializeOptions({})
-    async restore(
-        @Body()
-        data: RestoreDto,
-    ) {
-        const { ids } = data;
-        return this.service.restore(ids);
     }
 }

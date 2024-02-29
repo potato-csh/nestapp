@@ -129,7 +129,7 @@ export abstract class BaseService<
     }
 
     /**
-     * 删除分类
+     * 批量恢复回收站中的数据
      * @param ids
      */
     async restore(ids: string[]) {
@@ -163,7 +163,7 @@ export abstract class BaseService<
     }
 
     /**
-     *
+     * 更新数据，如果子类没有实现则抛出404错误
      * @param data
      * @param others
      */

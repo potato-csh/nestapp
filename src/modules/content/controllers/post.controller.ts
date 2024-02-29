@@ -28,6 +28,10 @@ import { PostService } from '../services/post.service';
 export class PostController {
     constructor(protected postService: PostService) {}
 
+    /**
+     * 查询文章列表
+     * @param options
+     */
     @Get()
     @SerializeOptions({ groups: ['post-list'] })
     async list(
@@ -37,6 +41,10 @@ export class PostController {
         return this.postService.paginate(options);
     }
 
+    /**
+     * 查询文章详情
+     * @param id
+     */
     @Get(':id')
     @SerializeOptions({ groups: ['post-detail'] })
     async detail(
@@ -46,6 +54,10 @@ export class PostController {
         return this.postService.detail(id);
     }
 
+    /**
+     * 新增文章
+     * @param data
+     */
     @Post()
     @SerializeOptions({ groups: ['post-detail'] })
     async store(
@@ -55,6 +67,10 @@ export class PostController {
         return this.postService.create(data);
     }
 
+    /**
+     *
+     * @param data 更新文章
+     */
     @Patch()
     @SerializeOptions({ groups: ['post-detail'] })
     async update(
@@ -64,6 +80,10 @@ export class PostController {
         return this.postService.update(data);
     }
 
+    /**
+     * 删除文章
+     * @param data
+     */
     @Delete()
     @SerializeOptions({ groups: ['post-list'] })
     async delete(
@@ -74,6 +94,10 @@ export class PostController {
         return this.postService.delete(ids, trash);
     }
 
+    /**
+     * 恢复软删除文章
+     * @param data
+     */
     @Patch('restore')
     @SerializeOptions({ groups: ['post-list'] })
     async restore(

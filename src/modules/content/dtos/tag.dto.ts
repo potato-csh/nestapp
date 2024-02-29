@@ -1,42 +1,28 @@
 import { PartialType } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
-import {
-    IsDefined,
-    IsEnum,
-    IsNotEmpty,
-    IsNumber,
-    IsOptional,
-    IsUUID,
-    MaxLength,
-    Min,
-} from 'class-validator';
-import { toNumber } from 'lodash';
+import { IsDefined, IsNotEmpty, IsOptional, IsUUID, MaxLength } from 'class-validator';
 
+import { IsUnique } from '@/modules/core/constraints/unique.constraint';
+import { IsUniqueExist } from '@/modules/core/constraints/unique.exist.constraint';
 import { DtoValidation } from '@/modules/core/decorators';
-import { SelectTrashMode } from '@/modules/database/constants';
-import { PaginateOptions } from '@/modules/database/types';
 
-@DtoValidation({ type: 'query' })
-export class QueryTagDto implements PaginateOptions {
-    @Transform(({ value }) => toNumber(value))
-    @Min(1, { message: '当前页必须大于1' })
-    @IsNumber()
-    @IsOptional()
-    page = 1;
+import { TagEntity } from '../entities';
 
-    @Transform(({ value }) => toNumber(value))
-    @Min(1, { message: '当前页必须大于1' })
-    @IsNumber()
-    @IsOptional()
-    limit = 10;
-
-    @IsEnum(SelectTrashMode)
-    @IsOptional()
-    trashed?: SelectTrashMode;
-}
-
+/**
+ * 新增标签验证
+ */
 @DtoValidation({ groups: ['create'] })
 export class CreateTagDto {
+    /**
+     * 标签名称
+     */
+    @IsUnique(TagEntity, {
+        groups: ['create'],
+        message: '标签名称重复',
+    })
+    @IsUniqueExist(TagEntity, {
+        groups: ['update'],
+        message: '标签名称重复',
+    })
     @MaxLength(255, {
         always: true,
         message: '标签名长度不得大于$constranit1',
@@ -45,6 +31,9 @@ export class CreateTagDto {
     @IsOptional({ groups: ['update'] })
     name: string;
 
+    /**
+     * 标签详情
+     */
     @MaxLength(500, {
         always: true,
         message: '标签描述长度不得大于$constranit1',
@@ -53,8 +42,14 @@ export class CreateTagDto {
     description?: string;
 }
 
+/**
+ * 更新标签验证
+ */
 @DtoValidation({ groups: ['update'] })
 export class UpdateTagDto extends PartialType(CreateTagDto) {
+    /**
+     * 待更新ID
+     */
     @IsUUID(undefined, {
         groups: ['update'],
         message: 'ID格式错误',

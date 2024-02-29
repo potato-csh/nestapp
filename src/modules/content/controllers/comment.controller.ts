@@ -15,6 +15,10 @@ import { CommentService } from '../services';
 export class CommentController {
     constructor(protected service: CommentService) {}
 
+    /**
+     * 查询评论树
+     * @param query
+     */
     @Get('tree')
     @SerializeOptions({ groups: ['comment-tree'] })
     async tree(
@@ -24,6 +28,10 @@ export class CommentController {
         return this.service.findTrees(query);
     }
 
+    /**
+     * 查询评论列表
+     * @param query
+     */
     @Get()
     @SerializeOptions({ groups: ['comment-list'] })
     async list(
@@ -33,6 +41,10 @@ export class CommentController {
         return this.service.paginate(query);
     }
 
+    /**
+     * 新增评论
+     * @param data
+     */
     @Post()
     @SerializeOptions({ groups: ['comment-detail'] })
     async store(
@@ -42,6 +54,10 @@ export class CommentController {
         return this.service.create(data);
     }
 
+    /**
+     * 删除评论
+     * @param data
+     */
     @Delete()
     @SerializeOptions({ groups: ['comment-list'] })
     async delete(

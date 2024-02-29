@@ -73,17 +73,17 @@ export class CommentService extends BaseService<CommentEntity, CommentRepository
      * @param current
      * @param parentId
      */
-    protected async getParent(current?: string, parentId?: string) {
-        if (current === parentId) return undefined;
+    protected async getParent(current?: string, id?: string) {
+        if (current === id) return undefined;
         let parent: CommentEntity | undefined;
-        if (parentId !== undefined) {
-            if (parentId === null) return null;
-            parent = await this.repository.findOne({ where: { id: parentId } });
+        if (id !== undefined) {
+            if (id === null) return null;
+            parent = await this.repository.findOne({
+                relations: ['parent', 'post'],
+                where: { id },
+            });
             if (!parent)
-                throw new EntityNotFoundError(
-                    CommentEntity,
-                    `Parent category ${parentId} not exist!`,
-                );
+                throw new EntityNotFoundError(CommentEntity, `Parent comment ${id} not exist!`);
         }
         return parent;
     }

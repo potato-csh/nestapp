@@ -18,8 +18,8 @@ import { isNil, toNumber } from 'lodash';
 import { IsDataExist } from '@/modules/core/constraints';
 import { DtoValidation } from '@/modules/core/decorators';
 import { toBoolean } from '@/modules/core/helpers';
-import { SelectTrashMode } from '@/modules/database/constants';
-import { PaginateOptions } from '@/modules/database/types';
+
+import { PaginateWithTrashedDto } from '@/modules/restful/dtos/paginate-with-trashed.dto';
 
 import { PostOrderType } from '../constants';
 import { CategoryEntity, TagEntity } from '../entities';
@@ -28,7 +28,7 @@ import { CategoryEntity, TagEntity } from '../entities';
  * 文章分页查询验证
  */
 @DtoValidation({ type: 'query' })
-export class QueryPostDto implements PaginateOptions {
+export class QueryPostDto extends PaginateWithTrashedDto {
     /**
      * 是否查询已发布(全部文章:不填、只查询已发布的:true、只查询未发布的:false)
      */
@@ -45,18 +45,6 @@ export class QueryPostDto implements PaginateOptions {
     })
     @IsOptional()
     orderBy?: PostOrderType;
-
-    @Transform(({ value }) => toNumber(value))
-    @Min(1, { message: '当前页必须大于1' })
-    @IsNumber()
-    @IsOptional()
-    page = 1;
-
-    @Transform(({ value }) => toNumber(value))
-    @Min(1, { message: '每页显示数据必须大于1' })
-    @IsNumber()
-    @IsOptional()
-    limit = 10;
 
     /**
      * 根据分类ID查询此分类及其后代分类下的文章
@@ -79,10 +67,6 @@ export class QueryPostDto implements PaginateOptions {
     @IsUUID(undefined, { message: 'ID格式错误' })
     @IsOptional()
     tag?: string;
-
-    @IsEnum(SelectTrashMode)
-    @IsOptional()
-    trashed?: SelectTrashMode;
 
     /**
      * 全文搜索
